@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#003087">
+<title>Battery Manufacturing</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--navy:#003087;--navy2:#001f5c;--navy3:#00174a;--blue:#185FA5;--blue2:#1976d2;--blue-light:#E3F0FF;--green:#2e7d32;--green-light:#E8F5E9;--amber:#e65100;--amber-light:#FFF3E0;--red:#c62828;--red-light:#FFEBEE;--gray:#546e7a;--gray-light:#ECEFF1;--border:#dde3ea;--surface:#fff;--bg:#f0f4f8}
+body{font-family:'Barlow',sans-serif;background:var(--bg);color:#1a2636;min-height:100vh}
+.topbar{background:var(--navy);color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 3px 16px rgba(0,0,30,0.35)}
+.topbar-inner{max-width:1600px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;height:64px}
+.brand{display:flex;align-items:center;gap:14px;flex:1}
+.brand-title{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;letter-spacing:0.03em;line-height:1;color:#fff}
+.brand-sub{font-size:11px;font-weight:400;color:rgba(255,255,255,0.6);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px}
+.nav{background:var(--navy2);border-bottom:2px solid rgba(255,255,255,0.07)}
+.nav-inner{max-width:1600px;margin:0 auto;padding:0 20px;display:flex;overflow-x:auto}
+.nav-btn{padding:13px 20px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:rgba(255,255,255,0.5);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all 0.18s;display:flex;align-items:center;gap:8px}
+.nav-btn:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.05)}
+.nav-btn.active{color:#fff;border-bottom-color:#4fc3f7;background:rgba(255,255,255,0.07)}
+.main{max-width:1600px;margin:0 auto;padding:20px}
+.page{display:none}.page.active{display:block}
+.card{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
+.card-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.05em;color:var(--navy);margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:4px;height:16px;background:var(--blue2);border-radius:2px;flex-shrink:0}
+.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:3px solid var(--blue2)}
+.stat-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
+.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1}
+.stat-val.blue{color:var(--blue)}.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}.stat-val.amber{color:var(--amber)}
+.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.sw{flex:1;min-width:180px;position:relative}
+.sw input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Barlow',sans-serif;background:#fff}
+.sico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:14px}
+select,input[type=text],input[type=number]{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Barlow',sans-serif;background:#fff;color:#1a2636}
+input:focus,select:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(25,118,210,0.1)}
+.btn{padding:8px 16px;font-size:13px;font-family:'Barlow',sans-serif;font-weight:600;cursor:pointer;border-radius:8px;border:1px solid var(--border);background:#fff;color:#1a2636;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--gray-light)}.btn:active{transform:scale(0.97)}
+.btn.primary{background:var(--blue2);color:#fff;border-color:var(--blue2)}.btn.primary:hover{background:var(--navy)}
+.btn.success{background:var(--green);color:#fff;border-color:var(--green)}
+.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
+.btn.sm{padding:4px 10px;font-size:11px}
+.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse;font-size:12px}
+.th-top{background:var(--navy);color:#fff;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;padding:7px 6px;border:1px solid rgba(255,255,255,0.1);letter-spacing:0.06em;white-space:nowrap}
+.th-s{background:#f0f4f8;padding:7px 8px;text-align:center;font-weight:700;font-size:10px;color:var(--gray);border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.04em}
+.th-s:hover{background:#e3eaf2}
+.thf{font-size:9px;font-weight:400;color:var(--blue2);display:block;margin-top:1px}
+td{padding:7px 8px;border-bottom:1px solid #f0f2f5;border-right:1px solid #f0f2f5;vertical-align:middle;text-align:center}
+td.L{text-align:left}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f5f9ff}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.bc{background:#E3F0FF;color:#003087}.ba{background:#E8F5E9;color:#1b5e20}.be{background:#EDE7F6;color:#4527a0}.bl{background:#FFF8E1;color:#e65100}
+.cv{font-weight:700}.cv.bh{color:var(--gray)}.cv.s1{color:var(--blue)}.cv.s2{color:var(--green)}.cv.s3{color:var(--amber)}.cv.tot{color:var(--red)}
+.formula-bar{background:var(--blue-light);border:1px solid #b3d1f5;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.ftitle{font-size:10px;font-weight:700;color:var(--navy);width:100%;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;text-transform:uppercase}
+.fml{font-size:11px;color:var(--navy);background:#fff;border:1px solid #b3d1f5;border-radius:4px;padding:2px 8px}
+.tbl-foot{font-size:12px;color:var(--gray);margin-top:8px;text-align:right}
+/* CT page */
+.ct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+.ct-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.ct-head{background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
+.ct-head .ln{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.06em}
+.ct-head .lbadge{background:rgba(255,255,255,0.18);border-radius:4px;padding:2px 8px;font-size:10px}
+.ct-list{padding:4px 0}
+.ct-row{display:flex;align-items:center;padding:5px 12px;border-bottom:1px solid #f0f2f5;gap:8px}
+.ct-row:last-child{border-bottom:none}
+.ct-row:hover{background:#f5f9ff}
+.ct-num{width:20px;height:20px;border-radius:50%;background:var(--blue-light);color:var(--navy);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ct-pname{flex:1;font-size:11px}
+.ct-bar-wrap{flex:0 0 54px;height:5px;background:#e8edf2;border-radius:3px;overflow:hidden}
+.ct-bar-fill{height:100%;background:var(--blue2);border-radius:3px}
+.ct-val{font-size:11px;font-weight:700;color:var(--blue2);min-width:44px;text-align:right}
+/* LvC page */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafbfc}
+.upload-zone:hover,.upload-zone.active-hover{border-color:var(--blue2);background:var(--blue-light)}
+.upload-zone.has-file{border-color:var(--green);background:var(--green-light)}
+.upload-ico{font-size:26px;margin-bottom:6px}
+.upload-txt{font-size:12px;color:var(--gray)}
+.chart-wrap{position:relative;height:300px}
+.util-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-top:14px}
+.util-card{border-radius:10px;padding:14px;border:1px solid var(--border);background:#fff}
+.util-ln{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px}
+.util-bar-bg{height:8px;background:#e8edf2;border-radius:4px;overflow:hidden;margin-bottom:6px}
+.util-bar{height:100%;border-radius:4px;transition:width 0.5s}
+.util-pct{font-size:20px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
+.util-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:4px}
+.ub-under{background:var(--green-light);color:var(--green)}
+.ub-ok{background:var(--blue-light);color:var(--blue)}
+.ub-over{background:var(--red-light);color:var(--red)}
+/* MP */
+.mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.mp-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
+.mp-head{background:var(--navy2);color:#fff;padding:10px 14px}
+.mp-head .mp-ln{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800}
+.mp-head .mp-tot{font-size:24px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:#4fc3f7}
+.mp-body{padding:10px 14px}
+.mp-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f2f5;font-size:11px}
+.mp-row:last-child{border-bottom:none}
+/* Modal */
+.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,30,0.55);z-index:300;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto}
+.moverlay.open{display:flex}
+.mbox{background:#fff;border-radius:14px;padding:22px;width:min(580px,100%);border:1px solid var(--border)}
+.mbox h2{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:4px;letter-spacing:0.04em}
+.msub{font-size:12px;color:var(--gray);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg label{font-size:10px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.06em}
+.fg input,.fg select{width:100%}
+.cprev{background:#f5f9ff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px}
+.crow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #eef0f4}
+.crow:last-child{border-bottom:none;font-weight:700}
+.crow .ck{color:var(--gray)}.crow .cv2{font-weight:700;color:var(--blue2)}.crow.ctot .cv2{color:var(--red)}
+.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.doverlay{display:none;position:fixed;inset:0;background:rgba(0,0,30,0.55);z-index:400;align-items:center;justify-content:center}
+.doverlay.open{display:flex}
+.dbox{background:#fff;border-radius:12px;padding:24px;width:min(290px,90vw);text-align:center}
+.dbox p{font-size:14px;font-weight:700;margin-bottom:4px}.dbox .dsub{font-size:12px;color:var(--gray);font-weight:400;margin-bottom:16px}
+.dbox .dacts{display:flex;gap:8px;justify-content:center}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1a2636;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:44px;color:var(--gray);font-size:13px}
+.order-scroll{max-height:240px;overflow-y:auto;border-radius:8px;border:1px solid var(--border)}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr 1fr}.stat-row{grid-template-columns:1fr 1fr}.main{padding:10px}.ct-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <svg width="56" height="38" viewBox="0 0 112 76" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="18" width="104" height="52" rx="7" fill="#f0f4f8" stroke="#c0cad6" stroke-width="1.5"/>
+        <rect x="4" y="18" width="104" height="22" rx="6" fill="#003087"/>
+        <rect x="4" y="32" width="104" height="8" fill="#003087"/>
+        <rect x="20" y="7" width="15" height="14" rx="3.5" fill="#e53935"/>
+        <rect x="77" y="7" width="15" height="14" rx="3.5" fill="#263238"/>
+        <rect x="23" y="3" width="9" height="7" rx="2" fill="#ef9a9a"/>
+        <rect x="80" y="3" width="9" height="7" rx="2" fill="#546e7a"/>
+        <rect x="10" y="42" width="92" height="22" rx="4" fill="white"/>
+        <text x="56" y="58" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="15" font-weight="900" fill="#003087" letter-spacing="2.5">INCOE</text>
+        <rect x="10" y="62" width="92" height="4" rx="2" fill="#003087"/>
+        <line x1="22" y1="21" x2="22" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+        <line x1="38" y1="21" x2="38" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+        <line x1="56" y1="21" x2="56" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+        <line x1="74" y1="21" x2="74" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+        <line x1="90" y1="21" x2="90" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
+      </svg>
+      <div>
+        <div class="brand-title">Battery Manufacturing</div>
+        <div class="brand-sub">Battery Manufacturing Optimization</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="setPage('ct',this)">⏱ Cycle Time</button>
+    <button class="nav-btn" onclick="setPage('cap',this)">📊 Capacity</button>
+    <button class="nav-btn" onclick="setPage('lvc',this)">⚖ Loading vs Capacity</button>
+    <button class="nav-btn" onclick="setPage('mp',this)">👷 Man Power Calculator</button>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- PAGE: CYCLE TIME -->
+<div class="page active" id="page-ct">
+  <div class="stat-row" id="ct-stats"></div>
+  <div class="toolbar">
+    <div class="sw"><span class="sico">⌕</span><input type="text" id="ct-search" placeholder="Cari nama proses..." oninput="renderCT()"></div>
+    <select id="ct-lf" onchange="renderCT()"><option value="">Semua Line</option></select>
+    <button class="btn primary" onclick="openCTModal()">+ Tambah Proses</button>
+  </div>
+  <div class="ct-grid" id="ct-grid"></div>
+</div>
+
+<!-- PAGE: CAPACITY -->
+<div class="page" id="page-cap">
+  <div class="formula-bar">
+    <div class="ftitle">Formula Otomatis:</div>
+    <span class="fml">BATT/H = 3600 ÷ CT(s)</span>
+    <span class="fml">S1 = 435 × 60 ÷ CT(s)</span>
+    <span class="fml">S2 = 405 × 60 ÷ CT(s)</span>
+    <span class="fml">S3 = 370 × 60 ÷ CT(s)</span>
+    <span class="fml">TOTAL = S1+S2+S3</span>
+  </div>
+  <div class="stat-row" id="cap-stats"></div>
+  <div class="toolbar">
+    <div class="sw"><span class="sico">⌕</span><input type="text" id="cap-search" placeholder="Cari battery type, group..." oninput="renderCap()"></div>
+    <select id="cap-tech" onchange="renderCap()"><option value="">Semua Technology</option><option>CONVENTIONAL</option><option>AGM</option><option>EFB</option><option>Li-Ion</option></select>
+    <select id="cap-group" onchange="renderCap()"><option value="">Semua Group</option></select>
+    <select id="cap-line" onchange="renderCap()"><option value="">Semua Line</option></select>
+    <button class="btn success" onclick="exportCapCSV()">↓ Export CSV</button>
+    <button class="btn primary" onclick="openCapModal()">+ Tambah</button>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th class="th-top" colspan="2">BATTERY</th>
+          <th class="th-top">TYPE</th><th class="th-top">PLATE</th>
+          <th class="th-top">SEP</th><th class="th-top">SPACER</th>
+          <th class="th-top" colspan="7">PRODUCTION CAPACITY STANDARD (PCS)</th>
+          <th class="th-top" rowspan="2" style="vertical-align:middle">AKSI</th>
+        </tr>
+        <tr>
+          <th class="th-s" onclick="csort('technology',this)">TECHNOLOGY</th>
+          <th class="th-s" onclick="csort('group',this)">GROUP</th>
+          <th class="th-s" onclick="csort('battery_type',this)">TYPE</th>
+          <th class="th-s" onclick="csort('plate',this)">PLATE</th>
+          <th class="th-s">SEP</th><th class="th-s">SPACER</th>
+          <th class="th-s" onclick="csort('line',this)">LINE</th>
+          <th class="th-s" onclick="csort('ct',this)">CT(s)<span class="thf">input</span></th>
+          <th class="th-s" onclick="csort('batt_h',this)">BATT/H<span class="thf">3600÷CT</span></th>
+          <th class="th-s" onclick="csort('s1',this)">S1<span class="thf">435×60÷CT</span></th>
+          <th class="th-s" onclick="csort('s2',this)">S2<span class="thf">405×60÷CT</span></th>
+          <th class="th-s" onclick="csort('s3',this)">S3<span class="thf">370×60÷CT</span></th>
+          <th class="th-s" onclick="csort('total',this)">TOTAL<span class="thf">S1+S2+S3</span></th>
+        </tr>
+      </thead>
+      <tbody id="cap-body"></tbody>
+    </table>
+  </div>
+  <div id="cap-empty" class="empty" style="display:none">Tidak ada data.</div>
+  <div class="tbl-foot" id="cap-foot"></div>
+</div>
+
+<!-- PAGE: LOADING VS CAPACITY -->
+<div class="page" id="page-lvc">
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Import Data Order</div>
+      <div class="upload-zone" id="uzone" onclick="document.getElementById('ofile').click()">
+        <div id="uico" class="upload-ico">📂</div>
+        <div class="upload-txt" id="utxt"><strong>Klik untuk upload</strong> Excel atau CSV<br><small style="color:#aaa">Kolom: Battery Type · Line · Qty Order</small></div>
+        <input type="file" id="ofile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleUpload(this)">
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn sm" onclick="dlTemplate()">↓ Template</button>
+        <button class="btn sm primary" onclick="useSample()">Gunakan Contoh</button>
+        <button class="btn sm danger" id="clear-btn" onclick="clearOrders()" style="display:none">✕ Hapus Data</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Pengaturan</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="fg"><label>Shift Aktif</label>
+          <select id="shift-sel" onchange="renderLVC()">
+            <option value="1">1 Shift</option><option value="2">2 Shift</option><option value="3" selected>3 Shift</option>
+          </select>
+        </div>
+        <div class="fg"><label>Filter Line</label>
+          <select id="lvc-lf" onchange="renderLVC()"><option value="">Semua Line</option></select>
+        </div>
+      </div>
+      <div class="stat-row" id="lvc-sum" style="grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:0"></div>
+    </div>
+  </div>
+  <div class="card" id="order-card" style="display:none">
+    <div class="card-title">Data Order</div>
+    <div class="order-scroll">
+      <table><thead><tr>
+        <th class="th-s">No</th><th class="th-s">Battery Type</th>
+        <th class="th-s">Line</th><th class="th-s">Qty Order</th>
+        <th class="th-s">Kapasitas (Shift)</th><th class="th-s">Utilization</th><th class="th-s">Status</th>
+      </tr></thead><tbody id="order-body"></tbody></table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Loading vs Capacity per Line</div>
+    <div class="chart-wrap"><canvas id="lvc-chart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="card-title">Utilization per Line</div>
+    <div class="util-grid" id="util-grid"></div>
+  </div>
+</div>
+
+<!-- PAGE: MAN POWER -->
+<div class="page" id="page-mp">
+  <div class="two-col" style="align-items:start">
+    <div class="card">
+      <div class="card-title">Parameter Perhitungan</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+        <div class="fg"><label>Efisiensi (%)</label><input type="number" id="mp-eff" value="85" min="1" max="100" onchange="calcMP()"></div>
+        <div class="fg"><label>Menit Kerja / Shift</label><input type="number" id="mp-wt" value="435" min="60" max="600" onchange="calcMP()"></div>
+        <div class="fg"><label>Shift</label>
+          <select id="mp-sh" onchange="calcMP()"><option value="1">1 Shift</option><option value="2">2 Shift</option><option value="3" selected>3 Shift</option></select>
+        </div>
+      </div>
+      <div style="background:#f5f9ff;border-radius:8px;padding:12px;font-size:12px;color:var(--gray);border:1px solid var(--border)">
+        <strong style="color:var(--navy)">Formula MP per proses:</strong><br>
+        MP = CEIL ( Qty Target × CT(s) ) ÷ ( Menit × 60 × Efisiensi × Shift )
+      </div>
+    </div>
+    <div class="card" style="text-align:center">
+      <div class="card-title">Total Kebutuhan</div>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:800;color:var(--navy);line-height:1" id="mp-big">0</div>
+      <div style="font-size:13px;color:var(--gray);margin-top:4px">Operator</div>
+      <div style="font-size:12px;color:var(--gray);margin-top:8px" id="mp-info">Upload data order terlebih dahulu</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">Kebutuhan Man Power per Line & Proses</div>
+    <div id="mp-empty" class="empty">Belum ada data order. Upload di menu Loading vs Capacity.</div>
+    <div class="mp-grid" id="mp-grid" style="display:none"></div>
+  </div>
+</div>
+
+</div><!-- end main -->
+
+<!-- MODALS -->
+<div class="moverlay" id="cap-modal">
+  <div class="mbox">
+    <h2 id="cap-mtitle">Tambah Data Capacity</h2>
+    <div class="msub">CT (s) diisi manual — BATT/H, S1, S2, S3, Total dihitung otomatis.</div>
+    <div class="fgrid">
+      <div class="fg"><label>Technology *</label><select id="cm-tech"><option value="">Pilih...</option><option>CONVENTIONAL</option><option>AGM</option><option>EFB</option><option>Li-Ion</option></select></div>
+      <div class="fg"><label>Group *</label><input type="text" id="cm-grp" placeholder="NS40"></div>
+      <div class="fg"><label>Battery Type *</label><input type="text" id="cm-type" placeholder="NS40"></div>
+      <div class="fg"><label>Plate</label><input type="number" id="cm-plate" min="0"></div>
+      <div class="fg"><label>Separator</label><input type="text" id="cm-sep" placeholder="PE"></div>
+      <div class="fg"><label>Spacer</label><input type="text" id="cm-spc" placeholder="1 atau -"></div>
+      <div class="fg"><label>Line</label><input type="number" id="cm-line" min="1"></div>
+      <div class="fg"><label>CT (s) *</label><input type="number" id="cm-ct" step="0.1" min="0.1" oninput="prevCap()"></div>
+      <div class="fg" style="align-self:end"><div style="background:var(--blue-light);border-radius:6px;padding:8px;font-size:10px;color:var(--navy);font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.05em">Otomatis dari CT</div></div>
+    </div>
+    <div class="cprev">
+      <div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.07em">Preview</div>
+      <div class="crow"><span class="ck">BATT/H = 3600 ÷ CT</span><span class="cv2" id="pv-bh">—</span></div>
+      <div class="crow"><span class="ck">S1 = 435×60 ÷ CT</span><span class="cv2" id="pv-s1">—</span></div>
+      <div class="crow"><span class="ck">S2 = 405×60 ÷ CT</span><span class="cv2" id="pv-s2">—</span></div>
+      <div class="crow"><span class="ck">S3 = 370×60 ÷ CT</span><span class="cv2" id="pv-s3">—</span></div>
+      <div class="crow ctot"><span class="ck">TOTAL = S1+S2+S3</span><span class="cv2" id="pv-tot">—</span></div>
+    </div>
+    <div class="mactions"><button class="btn" onclick="closeCapM()">Batal</button><button class="btn primary" onclick="saveCap()">Simpan</button></div>
+  </div>
+</div>
+
+<div class="moverlay" id="ct-modal">
+  <div class="mbox">
+    <h2 id="ct-mtitle">Tambah Proses</h2>
+    <div class="msub">Cycle time per proses di setiap line assembling.</div>
+    <div class="fgrid">
+      <div class="fg"><label>Line *</label>
+        <select id="ctm-line"><option value="">Pilih...</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+      </div>
+      <div class="fg"><label>Nama Proses *</label><input type="text" id="ctm-name" placeholder="misal: Casting"></div>
+      <div class="fg"><label>CT (detik) *</label><input type="number" id="ctm-ct" step="0.1" min="0.1" placeholder="18.5"></div>
+    </div>
+    <div class="mactions"><button class="btn" onclick="closeCTM()">Batal</button><button class="btn primary" onclick="saveCT()">Simpan</button></div>
+  </div>
+</div>
+
+<div class="doverlay" id="del-ov">
+  <div class="dbox"><p>Hapus data ini?</p><p class="dsub">Tidak bisa dibatalkan.</p>
+    <div class="dacts"><button class="btn" onclick="document.getElementById('del-ov').classList.remove('open')">Batal</button><button class="btn danger" onclick="doDel()">Hapus</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== CONSTANTS =====
+const S1M=435,S2M=405,S3M=370;
+function cc(ct){if(!ct||ct<=0)return{batt_h:0,s1:0,s2:0,s3:0,total:0};const b=Math.floor(3600/ct),s1=Math.floor(S1M*60/ct),s2=Math.floor(S2M*60/ct),s3=Math.floor(S3M*60/ct);return{batt_h:b,s1,s2,s3,total:s1+s2+s3}}
+
+// ===== SAMPLE CT DATA — 23 processes × 7 lines =====
+const PROCS=['Grid Casting','Paste Mixing','Pasting','Flash Drying','Curing','Cutting & Stacking','Lug Brushing','COS','Assembly','Insertion','Cover Sealing','Terminal Burning','Leak Test','Formation Charge','Final Discharge','Acid Filling','Sealing','Washing','Labeling','Final Inspection','Packing','OCV Test','Dispatch'];
+const PBASE=[18,45,22,15,180,28,12,35,40,20,25,30,8,480,240,15,12,10,8,12,15,5,10];
+function genCT(){let d=[],id=1;for(let ln=1;ln<=7;ln++){PROCS.forEach((p,i)=>{const f=0.85+Math.random()*0.35;d.push({id:id++,line:ln,process:p,ct:+(PBASE[i]*f).toFixed(1)})})}return d}
+
+// ===== CAP DATA =====
+const CAPRAW=[
+  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:7,separator:"PE",spacer:"1",line:1,ct:22.5},
+  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:9,separator:"PE",spacer:"-",line:1,ct:22.5},
+  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:10,separator:"PE",spacer:"-",line:1,ct:22.5},
+  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:11,separator:"PE",spacer:"-",line:1,ct:22.5},
+  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:12,separator:"PE",spacer:"-",line:1,ct:22.5},
+  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:9,separator:"PE",spacer:"2",line:3,ct:25.3},
+  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:11,separator:"PE",spacer:"2",line:3,ct:25.3},
+  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:13,separator:"PE",spacer:"-",line:3,ct:25.3},
+  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:15,separator:"PE",spacer:"-",line:3,ct:29.2},
+  {technology:"CONVENTIONAL",group:"55D23",battery_type:"55D23",plate:9,separator:"PE",spacer:"2",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"55D23",battery_type:"55D23",plate:11,separator:"PE",spacer:"2",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"55D23",battery_type:"55D23",plate:12,separator:"PE",spacer:"-",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:7,separator:"PE",spacer:"2",line:2,ct:22.0},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:9,separator:"PE",spacer:"-",line:5,ct:22.1},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:11,separator:"PE",spacer:"-",line:5,ct:22.1},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:12,separator:"PE",spacer:"-",line:5,ct:22.1},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:13,separator:"PE",spacer:"-",line:5,ct:22.1},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:14,separator:"PE",spacer:"-",line:5,ct:23.9},
+  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:15,separator:"PE",spacer:"-",line:5,ct:25.6},
+  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:11,separator:"PE",spacer:"-",line:6,ct:23.4},
+  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:13,separator:"PE",spacer:"-",line:6,ct:23.4},
+  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:15,separator:"PE",spacer:"2",line:6,ct:25.6},
+  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:16,separator:"PE",spacer:"-",line:6,ct:27.3},
+  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:17,separator:"PE",spacer:"-",line:6,ct:29.0},
+  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:18,separator:"PE",spacer:"-",line:6,ct:30.7},
+  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:15,separator:"PE",spacer:"2",line:2,ct:35.8},
+  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:17,separator:"PE",spacer:"2",line:2,ct:35.8},
+  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:20,separator:"PE",spacer:"2",line:2,ct:40.9},
+  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:21,separator:"PE",spacer:"-",line:2,ct:40.9},
+  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:19,separator:"PE",spacer:"2",line:4,ct:48.0},
+  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:21,separator:"PE",spacer:"2",line:4,ct:50.0},
+  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:24,separator:"PE",spacer:"2",line:4,ct:52.0},
+  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:25,separator:"PE",spacer:"-",line:4,ct:53.0},
+  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:23,separator:"PE",spacer:"2",line:4,ct:53.0},
+  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:25,separator:"PE",spacer:"2",line:4,ct:55.0},
+  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:27,separator:"PE",spacer:"2",line:4,ct:58.0},
+  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:30,separator:"PE",spacer:"2",line:4,ct:64.0},
+  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:31,separator:"PE",spacer:"2",line:4,ct:68.0},
+  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:31,separator:"PE",spacer:"2",line:7,ct:71.6},
+  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:33,separator:"PE",spacer:"2",line:7,ct:76.4},
+  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:35,separator:"PE",spacer:"2",line:7,ct:77.9},
+  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:37,separator:"PE",spacer:"2",line:7,ct:82.2},
+  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:41,separator:"PE",spacer:"-",line:7,ct:86.5},
+  {technology:"CONVENTIONAL",group:"545",battery_type:"545-19",plate:11,separator:"PE",spacer:"2",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"545",battery_type:"562-05",plate:14,separator:"PE",spacer:"-",line:7,ct:57.1},
+  {technology:"CONVENTIONAL",group:"545",battery_type:"544-59",plate:7,separator:"PE",spacer:"2",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"545",battery_type:"544-64",plate:9,separator:"PE",spacer:"2",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"555",battery_type:"555-30",plate:9,separator:"PE",spacer:"2",line:7,ct:28.0},
+  {technology:"CONVENTIONAL",group:"555",battery_type:"555-59",plate:11,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"555",battery_type:"555-65",plate:12,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"555",battery_type:"562-19",plate:13,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"566",battery_type:"566-33",plate:11,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"566",battery_type:"566-33",plate:13,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"566",battery_type:"574-12",plate:14,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"566",battery_type:"566-38",plate:15,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"566",battery_type:"580-24",plate:15,separator:"PE",spacer:"2",line:7,ct:35.0},
+  {technology:"CONVENTIONAL",group:"588",battery_type:"588-21",plate:15,separator:"PE",spacer:"2",line:7,ct:34.6},
+  {technology:"CONVENTIONAL",group:"588",battery_type:"588-21",plate:17,separator:"PE",spacer:"2",line:7,ct:34.6},
+  {technology:"CONVENTIONAL",group:"588",battery_type:"588-27",plate:18,separator:"PE",spacer:"2",line:7,ct:34.6},
+  {technology:"CONVENTIONAL",group:"588",battery_type:"600-38",plate:21,separator:"PE",spacer:"1",line:7,ct:40.5},
+  {technology:"CONVENTIONAL",group:"DIN A",battery_type:"620-34",plate:25,separator:"PE",spacer:"2",line:7,ct:94.5},
+  {technology:"CONVENTIONAL",group:"DIN B",battery_type:"650-38",plate:31,separator:"PE",spacer:"2",line:7,ct:94.5},
+  {technology:"CONVENTIONAL",group:"DIN B",battery_type:"670-18",plate:35,separator:"PE",spacer:"-",line:7,ct:94.5},
+  {technology:"CONVENTIONAL",group:"DIN-C",battery_type:"700-27",plate:41,separator:"PE",spacer:"2",line:7,ct:152.3},
+  {technology:"CONVENTIONAL",group:"N03",battery_type:"N03",plate:15,separator:"PE",spacer:"2",line:7,ct:24.8},
+  {technology:"CONVENTIONAL",group:"N12D",battery_type:"N12D",plate:19,separator:"PE",spacer:"2",line:7,ct:33.4},
+];
+
+// ===== STATE =====
+let ctData=JSON.parse(localStorage.getItem('bmo2_ct')||'null')||genCT();
+let capData=JSON.parse(localStorage.getItem('bmo2_cap')||'null')||CAPRAW.map((r,i)=>({id:i+1,...r,...cc(r.ct)}));
+let orderData=JSON.parse(localStorage.getItem('bmo2_ord')||'null')||[];
+let capNid=Math.max(0,...capData.map(d=>d.id))+1;
+let ctNid=Math.max(0,...ctData.map(d=>d.id))+1;
+let capEid=null,ctEid=null,delId=null,delType=null;
+let cSortCol=null,cSortDir=1;
+let lvcChart=null;
+
+function saveAll(){localStorage.setItem('bmo2_ct',JSON.stringify(ctData));localStorage.setItem('bmo2_cap',JSON.stringify(capData));localStorage.setItem('bmo2_ord',JSON.stringify(orderData))}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+// ===== NAV =====
+function setPage(id,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  el.classList.add('active');
+  if(id==='ct')renderCT();
+  if(id==='cap')renderCap();
+  if(id==='lvc'){buildLVCLF();renderLVC();}
+  if(id==='mp')calcMP();
+}
+
+// ===== CYCLE TIME =====
+function renderCT(){
+  const q=(document.getElementById('ct-search').value||'').toLowerCase();
+  const lf=document.getElementById('ct-lf').value;
+  const lines=[...new Set(ctData.map(r=>r.line))].sort((a,b)=>a-b);
+  const sel=document.getElementById('ct-lf');const cv=sel.value;
+  sel.innerHTML='<option value="">Semua Line</option>'+lines.map(l=>`<option value="${l}"${String(l)===cv?' selected':''}>Line ${l}</option>`).join('');
+  const filt=ctData.filter(r=>(!q||r.process.toLowerCase().includes(q))&&(!lf||String(r.line)===lf));
+  const byLine={};filt.forEach(r=>{(byLine[r.line]=byLine[r.line]||[]).push(r)});
+  const totLines=Object.keys(byLine).length,totP=filt.length;
+  const avgCT=totP?+(filt.reduce((s,r)=>s+r.ct,0)/totP).toFixed(1):0;
+  const maxCT=totP?Math.max(...filt.map(r=>r.ct)):0;
+  document.getElementById('ct-stats').innerHTML=`
+    <div class="stat"><div class="stat-lbl">Total Line</div><div class="stat-val blue">${totLines}</div></div>
+    <div class="stat"><div class="stat-lbl">Total Proses</div><div class="stat-val">${totP}</div></div>
+    <div class="stat"><div class="stat-lbl">Avg CT (s)</div><div class="stat-val amber">${avgCT}</div></div>
+    <div class="stat"><div class="stat-lbl">Max CT (s)</div><div class="stat-val red">${maxCT.toFixed(1)}</div></div>`;
+  const grid=document.getElementById('ct-grid');
+  if(!Object.keys(byLine).length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Tidak ada data.</div>';return}
+  const mx=Math.max(...filt.map(r=>r.ct),1);
+  grid.innerHTML=Object.keys(byLine).sort((a,b)=>a-b).map(ln=>{
+    const ps=byLine[ln];
+    const avg=+(ps.reduce((s,r)=>s+r.ct,0)/ps.length).toFixed(1);
+    return`<div class="ct-card">
+      <div class="ct-head"><span class="ln">Line ${ln}</span><span class="lbadge">${ps.length} proses · avg ${avg}s</span></div>
+      <div class="ct-list">${ps.map((r,i)=>`<div class="ct-row">
+        <div class="ct-num">${i+1}</div>
+        <div class="ct-pname">${r.process}</div>
+        <div class="ct-bar-wrap"><div class="ct-bar-fill" style="width:${Math.round(r.ct/mx*100)}%"></div></div>
+        <div class="ct-val">${r.ct}s</div>
+        <button class="btn sm" onclick="openCTEdit(${r.id})" style="padding:3px 7px">✎</button>
+        <button class="btn sm danger" onclick="askDel(${r.id},'ct')" style="padding:3px 7px">✕</button>
+      </div>`).join('')}</div>
+    </div>`;
+  }).join('');
+}
+function openCTModal(){ctEid=null;document.getElementById('ct-mtitle').textContent='Tambah Proses';['ctm-line','ctm-name','ctm-ct'].forEach(id=>document.getElementById(id).value='');document.getElementById('ct-modal').classList.add('open')}
+function closeCTM(){document.getElementById('ct-modal').classList.remove('open')}
+function openCTEdit(id){ctEid=id;const r=ctData.find(d=>d.id===id);document.getElementById('ct-mtitle').textContent='Edit Proses';document.getElementById('ctm-line').value=r.line;document.getElementById('ctm-name').value=r.process;document.getElementById('ctm-ct').value=r.ct;document.getElementById('ct-modal').classList.add('open')}
+function saveCT(){
+  const ln=parseInt(document.getElementById('ctm-line').value),nm=document.getElementById('ctm-name').value.trim(),ct=parseFloat(document.getElementById('ctm-ct').value);
+  if(!ln||!nm||!ct){alert('Semua field wajib diisi.');return}
+  if(ctEid){Object.assign(ctData.find(d=>d.id===ctEid),{line:ln,process:nm,ct});toast('Proses diperbarui')}
+  else{ctData.push({id:ctNid++,line:ln,process:nm,ct});toast('Proses ditambahkan')}
+  saveAll();closeCTM();renderCT();
+}
+
+// ===== CAPACITY =====
+function renderCap(){
+  const q=(document.getElementById('cap-search').value||'').toLowerCase();
+  const ft=document.getElementById('cap-tech').value,fg=document.getElementById('cap-group').value,fl=document.getElementById('cap-line').value;
+  const groups=[...new Set(capData.map(r=>r.group))].sort();
+  const lines=[...new Set(capData.map(r=>r.line))].sort((a,b)=>a-b);
+  const gs=document.getElementById('cap-group');const cg=gs.value;
+  gs.innerHTML='<option value="">Semua Group</option>'+groups.map(g=>`<option${g===cg?' selected':''}>${g}</option>`).join('');
+  const ls=document.getElementById('cap-line');const cl=ls.value;
+  ls.innerHTML='<option value="">Semua Line</option>'+lines.map(l=>`<option value="${l}"${String(l)===cl?' selected':''}>Line ${l}</option>`).join('');
+  let rows=capData.filter(r=>{const s=(r.battery_type+r.group+r.technology).toLowerCase();return(!q||s.includes(q))&&(!ft||r.technology===ft)&&(!fg||r.group===fg)&&(!fl||String(r.line)===fl)});
+  if(cSortCol)rows=[...rows].sort((a,b)=>{const va=a[cSortCol],vb=b[cSortCol];return(isNaN(va)?String(va).localeCompare(String(vb)):(va-vb))*cSortDir});
+  const em=document.getElementById('cap-empty'),tb=document.getElementById('cap-body');
+  if(!rows.length){tb.innerHTML='';em.style.display='block';renderCapStats([]);return}
+  em.style.display='none';
+  const bm={CONVENTIONAL:'bc',AGM:'ba',EFB:'be','Li-Ion':'bl'};
+  tb.innerHTML=rows.map(r=>`<tr>
+    <td class="L"><span class="badge ${bm[r.technology]||'bc'}">${r.technology}</span></td>
+    <td style="font-weight:700">${r.group}</td><td>${r.battery_type}</td><td>${r.plate}</td>
+    <td>${r.separator||'-'}</td><td>${r.spacer||'-'}</td>
+    <td style="font-weight:700">${r.line}</td><td>${r.ct.toFixed(1)}</td>
+    <td class="cv bh">${r.batt_h}</td>
+    <td class="cv s1">${r.s1.toLocaleString()}</td>
+    <td class="cv s2">${r.s2.toLocaleString()}</td>
+    <td class="cv s3">${r.s3.toLocaleString()}</td>
+    <td class="cv tot" style="font-weight:700">${r.total.toLocaleString()}</td>
+    <td><div style="display:flex;gap:4px;justify-content:center">
+      <button class="btn sm" onclick="openCapEdit(${r.id})">✎</button>
+      <button class="btn sm danger" onclick="askDel(${r.id},'cap')">✕</button>
+    </div></td>
+  </tr>`).join('');
+  document.getElementById('cap-foot').textContent=`Menampilkan ${rows.length} dari ${capData.length} data`;
+  renderCapStats(rows);
+}
+function renderCapStats(rows){
+  const a=rows.length?+(rows.reduce((s,r)=>s+r.ct,0)/rows.length).toFixed(1):0;
+  const t1=rows.reduce((s,r)=>s+r.s1,0),t3=rows.reduce((s,r)=>s+r.s3,0),td=rows.reduce((s,r)=>s+r.total,0);
+  document.getElementById('cap-stats').innerHTML=`
+    <div class="stat"><div class="stat-lbl">Total Tipe</div><div class="stat-val blue">${rows.length}</div></div>
+    <div class="stat"><div class="stat-lbl">Avg CT (s)</div><div class="stat-val">${a}</div></div>
+    <div class="stat"><div class="stat-lbl">Total S1</div><div class="stat-val green">${t1.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-lbl">Total S3</div><div class="stat-val amber">${t3.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-lbl">Total 3 Shift</div><div class="stat-val red">${td.toLocaleString()}</div></div>`;
+}
+function csort(col,el){
+  cSortCol===col?cSortDir*=-1:(cSortCol=col,cSortDir=1);
+  document.querySelectorAll('.th-s').forEach(t=>{if(t.firstChild&&t.firstChild.nodeType===3)t.firstChild.textContent=t.firstChild.textContent.replace(/ [↑↓]/g,'')});
+  if(el.firstChild&&el.firstChild.nodeType===3)el.firstChild.textContent=el.firstChild.textContent.replace(/ [↑↓]/g,'')+(cSortDir===1?' ↑':' ↓');
+  renderCap();
+}
+function prevCap(){
+  const ct=parseFloat(document.getElementById('cm-ct').value),c=cc(ct);
+  if(!ct||ct<=0){['pv-bh','pv-s1','pv-s2','pv-s3','pv-tot'].forEach(id=>document.getElementById(id).textContent='—');return}
+  document.getElementById('pv-bh').textContent=c.batt_h+' batt/h';
+  document.getElementById('pv-s1').textContent=c.s1.toLocaleString()+' unit';
+  document.getElementById('pv-s2').textContent=c.s2.toLocaleString()+' unit';
+  document.getElementById('pv-s3').textContent=c.s3.toLocaleString()+' unit';
+  document.getElementById('pv-tot').textContent=c.total.toLocaleString()+' unit';
+}
+function openCapModal(){capEid=null;document.getElementById('cap-mtitle').textContent='Tambah Data';['cm-tech','cm-grp','cm-type','cm-plate','cm-sep','cm-spc','cm-line','cm-ct'].forEach(id=>{const e=document.getElementById(id);e.value=e.tagName==='SELECT'?'':''});prevCap();document.getElementById('cap-modal').classList.add('open')}
+function closeCapM(){document.getElementById('cap-modal').classList.remove('open')}
+function openCapEdit(id){
+  capEid=id;const r=capData.find(d=>d.id===id);
+  document.getElementById('cap-mtitle').textContent='Edit Data';
+  document.getElementById('cm-tech').value=r.technology;document.getElementById('cm-grp').value=r.group;document.getElementById('cm-type').value=r.battery_type;
+  document.getElementById('cm-plate').value=r.plate;document.getElementById('cm-sep').value=r.separator;document.getElementById('cm-spc').value=r.spacer;
+  document.getElementById('cm-line').value=r.line;document.getElementById('cm-ct').value=r.ct;prevCap();document.getElementById('cap-modal').classList.add('open');
+}
+function saveCap(){
+  const tech=document.getElementById('cm-tech').value,grp=document.getElementById('cm-grp').value.trim(),typ=document.getElementById('cm-type').value.trim(),ct=parseFloat(document.getElementById('cm-ct').value);
+  if(!tech||!grp||!typ){alert('Technology, Group, Battery Type wajib diisi.');return}
+  if(!ct||ct<=0){alert('CT wajib diisi dan > 0.');return}
+  const rec={technology:tech,group:grp,battery_type:typ,plate:parseInt(document.getElementById('cm-plate').value)||0,separator:document.getElementById('cm-sep').value.trim()||'-',spacer:document.getElementById('cm-spc').value.trim()||'-',line:parseInt(document.getElementById('cm-line').value)||0,ct,...cc(ct)};
+  if(capEid){Object.assign(capData.find(d=>d.id===capEid),rec);toast('Data diperbarui')}
+  else{rec.id=capNid++;capData.push(rec);toast('Data ditambahkan')}
+  saveAll();closeCapM();renderCap();
+}
+function exportCapCSV(){
+  const h='Technology,Group,Battery Type,Plate,Separator,Spacer,Line,CT(s),BATT/H,S1,S2,S3,Total';
+  const rows=capData.map(r=>[r.technology,r.group,r.battery_type,r.plate,r.separator,r.spacer,r.line,r.ct,r.batt_h,r.s1,r.s2,r.s3,r.total].join(','));
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([h,...rows].join('\n'));a.download='PCS_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+}
+
+// ===== DELETE =====
+function askDel(id,type){delId=id;delType=type;document.getElementById('del-ov').classList.add('open')}
+function doDel(){
+  if(delType==='cap'){capData=capData.filter(d=>d.id!==delId);renderCap();toast('Data capacity dihapus')}
+  else if(delType==='ct'){ctData=ctData.filter(d=>d.id!==delId);renderCT();toast('Proses dihapus')}
+  saveAll();document.getElementById('del-ov').classList.remove('open');
+}
+
+// ===== LOADING VS CAPACITY =====
+function buildLVCLF(){
+  const lines=[...new Set(capData.map(r=>r.line))].sort((a,b)=>a-b);
+  const sel=document.getElementById('lvc-lf');const cv=sel.value;
+  sel.innerHTML='<option value="">Semua Line</option>'+lines.map(l=>`<option value="${l}"${String(l)===cv?' selected':''}>Line ${l}</option>`).join('');
+}
+function handleUpload(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      let rows=[];
+      if(file.name.toLowerCase().endsWith('.csv')){
+        const lines=e.target.result.split('\n').filter(l=>l.trim());
+        const hdr=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/"/g,''));
+        const bi=hdr.findIndex(h=>h.includes('battery')||h.includes('type'));
+        const li=hdr.findIndex(h=>h.includes('line'));
+        const qi=hdr.findIndex(h=>h.includes('qty')||h.includes('order')||h.includes('quantity'));
+        for(let i=1;i<lines.length;i++){
+          const c=lines[i].split(',').map(v=>v.trim().replace(/"/g,''));
+          if(c.length<3)continue;
+          rows.push({battery_type:c[bi>=0?bi:0],line:parseInt(c[li>=0?li:1])||1,qty:parseInt(c[qi>=0?qi:2])||0});
+        }
+      } else {
+        const wb=XLSX.read(e.target.result,{type:'array'});
+        const ws=wb.Sheets[wb.SheetNames[0]];
+        XLSX.utils.sheet_to_json(ws,{defval:''}).forEach(row=>{
+          const bk=Object.keys(row).find(k=>k.toLowerCase().includes('battery')||k.toLowerCase().includes('type'));
+          const lk=Object.keys(row).find(k=>k.toLowerCase().includes('line'));
+          const qk=Object.keys(row).find(k=>k.toLowerCase().includes('qty')||k.toLowerCase().includes('order')||k.toLowerCase().includes('quantity'));
+          if(bk&&lk&&qk)rows.push({battery_type:String(row[bk]),line:parseInt(row[lk])||1,qty:parseInt(row[qk])||0});
+        });
+      }
+      if(!rows.length){alert('Data tidak ditemukan. Pastikan kolom: Battery Type, Line, Qty Order');return}
+      orderData=rows;saveAll();setUploadUI(file.name,rows.length);renderLVC();calcMP();toast(`${rows.length} baris order berhasil diimport`);
+    }catch(err){alert('Gagal membaca file: '+err.message)}
+  };
+  file.name.toLowerCase().endsWith('.csv')?reader.readAsText(file):reader.readAsArrayBuffer(file);
+}
+function setUploadUI(name,count){
+  document.getElementById('uzone').classList.add('has-file');
+  document.getElementById('uico').textContent='✅';
+  document.getElementById('utxt').innerHTML=`<strong>${name}</strong><br><small style="color:var(--green)">${count} baris order dimuat</small>`;
+  document.getElementById('clear-btn').style.display='';
+  document.getElementById('order-card').style.display='';
+}
+function clearOrders(){
+  orderData=[];saveAll();
+  document.getElementById('uzone').classList.remove('has-file');
+  document.getElementById('uico').textContent='📂';
+  document.getElementById('utxt').innerHTML='<strong>Klik untuk upload</strong> Excel atau CSV<br><small style="color:#aaa">Kolom: Battery Type · Line · Qty Order</small>';
+  document.getElementById('clear-btn').style.display='none';
+  document.getElementById('order-card').style.display='none';
+  document.getElementById('ofile').value='';
+  renderLVC();calcMP();
+}
+function useSample(){
+  orderData=capData.slice(0,20).map(r=>({battery_type:r.battery_type,line:r.line,qty:Math.floor(400+Math.random()*1100)}));
+  saveAll();setUploadUI('data-contoh.csv',orderData.length);renderLVC();calcMP();toast('Data contoh dimuat');
+}
+function dlTemplate(){
+  const csv='Battery Type,Line,Qty Order\nNS40,1,800\nN50,5,1200\nN70,6,600\nN100,2,400';
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='template_order.csv';a.click();
+}
+function renderLVC(){
+  const sc=parseInt(document.getElementById('shift-sel').value)||3;
+  const lf=document.getElementById('lvc-lf').value;
+  const allLines=[...new Set(capData.map(r=>r.line))].sort((a,b)=>a-b);
+  const lines=lf?allLines.filter(l=>String(l)===lf):allLines;
+
+  // Cap & load per line
+  const capMap={},loadMap={};
+  lines.forEach(ln=>{
+    const items=capData.filter(r=>r.line===ln);
+    const c1=items.reduce((s,r)=>s+r.s1,0),c2=items.reduce((s,r)=>s+r.s2,0),c3=items.reduce((s,r)=>s+r.s3,0);
+    const tot=sc===1?c1:sc===2?c1+c2:c1+c2+c3;
+    capMap[ln]={c1,c2,c3,tot};
+    loadMap[ln]=0;
+  });
+  orderData.filter(o=>!lf||String(o.line)===lf).forEach(o=>{if(loadMap[o.line]!==undefined)loadMap[o.line]+=o.qty});
+
+  const totCap=lines.reduce((s,l)=>s+(capMap[l]?.tot||0),0);
+  const totLoad=lines.reduce((s,l)=>s+(loadMap[l]||0),0);
+  const util=totCap?Math.round(totLoad/totCap*100):0;
+  const uColor=util>100?'red':util>80?'amber':'green';
+  document.getElementById('lvc-sum').innerHTML=`
+    <div class="stat"><div class="stat-lbl">Total Kapasitas</div><div class="stat-val blue">${totCap.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-lbl">Total Loading</div><div class="stat-val amber">${totLoad.toLocaleString()}</div></div>
+    <div class="stat"><div class="stat-lbl">Utilisasi</div><div class="stat-val ${uColor}">${util}%</div></div>
+    <div class="stat"><div class="stat-lbl">Status</div><div class="stat-val" style="font-size:16px">${util>100?'🔴 Overload':util>80?'🟡 Normal':'🟢 Underload'}</div></div>`;
+
+  // Order table
+  if(orderData.length){
+    const ob=document.getElementById('order-body');
+    const getCapShift=(bt,ln)=>{const c=capData.find(r=>r.battery_type===bt&&r.line===ln);if(!c)return 0;return sc===1?c.s1:sc===2?c.s1+c.s2:c.s1+c.s2+c.s3};
+    ob.innerHTML=orderData.filter(o=>!lf||String(o.line)===lf).map((o,i)=>{
+      const cap=getCapShift(o.battery_type,o.line);
+      const pct=cap?Math.round(o.qty/cap*100):0;
+      const st=pct>100?'<span style="background:#FFEBEE;color:#c62828;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">OVERLOAD</span>':pct>80?'<span style="background:#FFF3E0;color:#e65100;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">NORMAL</span>':'<span style="background:#E8F5E9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">UNDERLOAD</span>';
+      return`<tr><td>${i+1}</td><td class="L">${o.battery_type}</td><td>Line ${o.line}</td><td style="font-weight:700">${o.qty.toLocaleString()}</td><td>${cap.toLocaleString()}</td><td style="font-weight:700">${pct}%</td><td>${st}</td></tr>`;
+    }).join('');
+  }
+
+  // Chart
+  if(lvcChart)lvcChart.destroy();
+  const ctx=document.getElementById('lvc-chart').getContext('2d');
+  const labels=lines.map(l=>`Line ${l}`);
+  lvcChart=new Chart(ctx,{
+    data:{
+      labels,
+      datasets:[
+        {type:'bar',label:'Kapasitas S1',data:lines.map(l=>capMap[l]?.c1||0),backgroundColor:'rgba(25,118,210,0.72)',stack:'cap',order:2},
+        {type:'bar',label:'Kapasitas S2',data:lines.map(l=>sc>=2?capMap[l]?.c2||0:0),backgroundColor:'rgba(46,125,50,0.72)',stack:'cap',order:2},
+        {type:'bar',label:'Kapasitas S3',data:lines.map(l=>sc>=3?capMap[l]?.c3||0:0),backgroundColor:'rgba(230,81,0,0.72)',stack:'cap',order:2},
+        {type:'line',label:'Loading (Order)',data:lines.map(l=>loadMap[l]||0),borderColor:'#c62828',borderWidth:2.5,pointRadius:6,pointBackgroundColor:'#c62828',backgroundColor:'rgba(198,40,40,0.08)',tension:0.3,fill:false,order:1},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{family:'Barlow, sans-serif',size:12},usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toLocaleString()}`}}},
+      scales:{
+        x:{stacked:true,grid:{display:false},ticks:{font:{family:'Barlow, sans-serif',size:12}}},
+        y:{stacked:false,grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{family:'Barlow, sans-serif',size:11},callback:v=>v.toLocaleString()}}
+      }
+    }
+  });
+
+  // Utilization
+  const ug=document.getElementById('util-grid');
+  ug.innerHTML=lines.map(ln=>{
+    const cap=capMap[ln]?.tot||0,load=loadMap[ln]||0;
+    const pct=cap?Math.round(load/cap*100):0;
+    const clr=pct>100?'#c62828':pct>80?'#e65100':'#2e7d32';
+    const cls=pct>100?'ub-over':pct>80?'ub-ok':'ub-under';
+    const lbl=pct>100?'OVERLOAD':pct>80?'NORMAL':'UNDERLOAD';
+    return`<div class="util-card">
+      <div class="util-ln">Line ${ln}</div>
+      <div class="util-bar-bg"><div class="util-bar" style="width:${Math.min(pct,100)}%;background:${clr}"></div></div>
+      <div class="util-pct" style="color:${clr}">${pct}%</div>
+      <div style="font-size:11px;color:var(--gray);margin:3px 0">Load ${load.toLocaleString()} / Cap ${cap.toLocaleString()}</div>
+      <span class="util-badge ${cls}">${lbl}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== MAN POWER =====
+function calcMP(){
+  const eff=parseFloat(document.getElementById('mp-eff').value)/100||0.85;
+  const wm=parseFloat(document.getElementById('mp-wt').value)||435;
+  const sh=parseInt(document.getElementById('mp-sh').value)||3;
+  if(!orderData.length){
+    document.getElementById('mp-empty').style.display='block';
+    document.getElementById('mp-grid').style.display='none';
+    document.getElementById('mp-big').textContent='0';
+    document.getElementById('mp-info').textContent='Upload data order terlebih dahulu';
+    return;
+  }
+  document.getElementById('mp-empty').style.display='none';
+  document.getElementById('mp-grid').style.display='grid';
+
+  const byLine={};
+  orderData.forEach(o=>{(byLine[o.line]=byLine[o.line]||[]).push(o)});
+
+  let grand=0;
+  const cards=Object.keys(byLine).sort((a,b)=>a-b).map(ln=>{
+    const orders=byLine[ln];
+    const totalQty=orders.reduce((s,o)=>s+o.qty,0);
+    const lineProcs=ctData.filter(r=>r.line===parseInt(ln));
+    const avail=wm*60*eff*sh;
+    const pmp=lineProcs.map(p=>({name:p.process,mp:Math.max(1,Math.ceil(totalQty*p.ct/avail))}));
+    const tot=pmp.reduce((s,p)=>s+p.mp,0);
+    grand+=tot;
+    return`<div class="mp-card">
+      <div class="mp-head">
+        <div class="mp-ln">Line ${ln}</div>
+        <div class="mp-tot">${tot} <span style="font-size:12px;opacity:0.7">orang</span></div>
+        <div style="font-size:11px;opacity:0.6;margin-top:2px">Target: ${totalQty.toLocaleString()} unit · ${sh} shift</div>
+      </div>
+      <div class="mp-body">
+        ${pmp.slice(0,10).map(p=>`<div class="mp-row"><span style="color:var(--gray)">${p.name}</span><span style="font-weight:700;color:var(--navy)">${p.mp} org</span></div>`).join('')}
+        ${pmp.length>10?`<div style="text-align:center;font-size:11px;color:var(--gray);padding:5px">+${pmp.length-10} proses lainnya</div>`:''}
+      </div>
+    </div>`;
+  });
+  document.getElementById('mp-grid').innerHTML=cards.join('');
+  document.getElementById('mp-big').textContent=grand.toLocaleString();
+  document.getElementById('mp-info').textContent=`${Object.keys(byLine).length} line aktif · ${orderData.length} tipe battery`;
+}
+
+// ===== INIT =====
+if(orderData.length){setUploadUI('data-tersimpan',orderData.length)}
+renderCT();
+</script>
+</body>
+</html>
