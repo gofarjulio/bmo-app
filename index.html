@@ -3,806 +3,1971 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#003087">
-<title>Battery Manufacturing</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<title>Battery Production Management System</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@300;400;500;600&display=swap');
-*{box-sizing:border-box;margin:0;padding:0}
-:root{--navy:#003087;--navy2:#001f5c;--navy3:#00174a;--blue:#185FA5;--blue2:#1976d2;--blue-light:#E3F0FF;--green:#2e7d32;--green-light:#E8F5E9;--amber:#e65100;--amber-light:#FFF3E0;--red:#c62828;--red-light:#FFEBEE;--gray:#546e7a;--gray-light:#ECEFF1;--border:#dde3ea;--surface:#fff;--bg:#f0f4f8}
-body{font-family:'Barlow',sans-serif;background:var(--bg);color:#1a2636;min-height:100vh}
-.topbar{background:var(--navy);color:#fff;position:sticky;top:0;z-index:200;box-shadow:0 3px 16px rgba(0,0,30,0.35)}
-.topbar-inner{max-width:1600px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;height:64px}
-.brand{display:flex;align-items:center;gap:14px;flex:1}
-.brand-title{font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:800;letter-spacing:0.03em;line-height:1;color:#fff}
-.brand-sub{font-size:11px;font-weight:400;color:rgba(255,255,255,0.6);letter-spacing:0.08em;text-transform:uppercase;margin-top:2px}
-.nav{background:var(--navy2);border-bottom:2px solid rgba(255,255,255,0.07)}
-.nav-inner{max-width:1600px;margin:0 auto;padding:0 20px;display:flex;overflow-x:auto}
-.nav-btn{padding:13px 20px;font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:rgba(255,255,255,0.5);background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;transition:all 0.18s;display:flex;align-items:center;gap:8px}
-.nav-btn:hover{color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.05)}
-.nav-btn.active{color:#fff;border-bottom-color:#4fc3f7;background:rgba(255,255,255,0.07)}
-.main{max-width:1600px;margin:0 auto;padding:20px}
-.page{display:none}.page.active{display:block}
-.card{background:var(--surface);border-radius:12px;border:1px solid var(--border);padding:20px;margin-bottom:16px}
-.card-title{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.05em;color:var(--navy);margin-bottom:14px;text-transform:uppercase;display:flex;align-items:center;gap:8px}
-.card-title::before{content:'';width:4px;height:16px;background:var(--blue2);border-radius:2px;flex-shrink:0}
-.stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px;border-top:3px solid var(--blue2)}
-.stat-lbl{font-size:10px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:4px}
-.stat-val{font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1}
-.stat-val.blue{color:var(--blue)}.stat-val.green{color:var(--green)}.stat-val.red{color:var(--red)}.stat-val.amber{color:var(--amber)}
-.toolbar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.sw{flex:1;min-width:180px;position:relative}
-.sw input{width:100%;padding:8px 12px 8px 34px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Barlow',sans-serif;background:#fff}
-.sico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--gray);font-size:14px}
-select,input[type=text],input[type=number]{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Barlow',sans-serif;background:#fff;color:#1a2636}
-input:focus,select:focus{outline:none;border-color:var(--blue2);box-shadow:0 0 0 3px rgba(25,118,210,0.1)}
-.btn{padding:8px 16px;font-size:13px;font-family:'Barlow',sans-serif;font-weight:600;cursor:pointer;border-radius:8px;border:1px solid var(--border);background:#fff;color:#1a2636;transition:all 0.15s;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
-.btn:hover{background:var(--gray-light)}.btn:active{transform:scale(0.97)}
-.btn.primary{background:var(--blue2);color:#fff;border-color:var(--blue2)}.btn.primary:hover{background:var(--navy)}
-.btn.success{background:var(--green);color:#fff;border-color:var(--green)}
-.btn.danger{background:var(--red);color:#fff;border-color:var(--red)}
-.btn.sm{padding:4px 10px;font-size:11px}
-.tbl-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
-table{width:100%;border-collapse:collapse;font-size:12px}
-.th-top{background:var(--navy);color:#fff;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:700;padding:7px 6px;border:1px solid rgba(255,255,255,0.1);letter-spacing:0.06em;white-space:nowrap}
-.th-s{background:#f0f4f8;padding:7px 8px;text-align:center;font-weight:700;font-size:10px;color:var(--gray);border-bottom:1px solid var(--border);border-right:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.04em}
-.th-s:hover{background:#e3eaf2}
-.thf{font-size:9px;font-weight:400;color:var(--blue2);display:block;margin-top:1px}
-td{padding:7px 8px;border-bottom:1px solid #f0f2f5;border-right:1px solid #f0f2f5;vertical-align:middle;text-align:center}
-td.L{text-align:left}
-tr:last-child td{border-bottom:none}
-tr:hover td{background:#f5f9ff}
-.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
-.bc{background:#E3F0FF;color:#003087}.ba{background:#E8F5E9;color:#1b5e20}.be{background:#EDE7F6;color:#4527a0}.bl{background:#FFF8E1;color:#e65100}
-.cv{font-weight:700}.cv.bh{color:var(--gray)}.cv.s1{color:var(--blue)}.cv.s2{color:var(--green)}.cv.s3{color:var(--amber)}.cv.tot{color:var(--red)}
-.formula-bar{background:var(--blue-light);border:1px solid #b3d1f5;border-radius:8px;padding:10px 14px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
-.ftitle{font-size:10px;font-weight:700;color:var(--navy);width:100%;font-family:'Barlow Condensed',sans-serif;letter-spacing:0.08em;text-transform:uppercase}
-.fml{font-size:11px;color:var(--navy);background:#fff;border:1px solid #b3d1f5;border-radius:4px;padding:2px 8px}
-.tbl-foot{font-size:12px;color:var(--gray);margin-top:8px;text-align:right}
-/* CT page */
-.ct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
-.ct-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
-.ct-head{background:var(--navy);color:#fff;padding:10px 14px;display:flex;align-items:center;justify-content:space-between}
-.ct-head .ln{font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:800;letter-spacing:0.06em}
-.ct-head .lbadge{background:rgba(255,255,255,0.18);border-radius:4px;padding:2px 8px;font-size:10px}
-.ct-list{padding:4px 0}
-.ct-row{display:flex;align-items:center;padding:5px 12px;border-bottom:1px solid #f0f2f5;gap:8px}
-.ct-row:last-child{border-bottom:none}
-.ct-row:hover{background:#f5f9ff}
-.ct-num{width:20px;height:20px;border-radius:50%;background:var(--blue-light);color:var(--navy);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.ct-pname{flex:1;font-size:11px}
-.ct-bar-wrap{flex:0 0 54px;height:5px;background:#e8edf2;border-radius:3px;overflow:hidden}
-.ct-bar-fill{height:100%;background:var(--blue2);border-radius:3px}
-.ct-val{font-size:11px;font-weight:700;color:var(--blue2);min-width:44px;text-align:right}
-/* LvC page */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.upload-zone{border:2px dashed var(--border);border-radius:10px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;background:#fafbfc}
-.upload-zone:hover,.upload-zone.active-hover{border-color:var(--blue2);background:var(--blue-light)}
-.upload-zone.has-file{border-color:var(--green);background:var(--green-light)}
-.upload-ico{font-size:26px;margin-bottom:6px}
-.upload-txt{font-size:12px;color:var(--gray)}
-.chart-wrap{position:relative;height:300px}
-.util-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:10px;margin-top:14px}
-.util-card{border-radius:10px;padding:14px;border:1px solid var(--border);background:#fff}
-.util-ln{font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px}
-.util-bar-bg{height:8px;background:#e8edf2;border-radius:4px;overflow:hidden;margin-bottom:6px}
-.util-bar{height:100%;border-radius:4px;transition:width 0.5s}
-.util-pct{font-size:20px;font-weight:700;font-family:'Barlow Condensed',sans-serif}
-.util-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;display:inline-block;margin-top:4px}
-.ub-under{background:var(--green-light);color:var(--green)}
-.ub-ok{background:var(--blue-light);color:var(--blue)}
-.ub-over{background:var(--red-light);color:var(--red)}
-/* MP */
-.mp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-.mp-card{background:#fff;border-radius:10px;border:1px solid var(--border);overflow:hidden}
-.mp-head{background:var(--navy2);color:#fff;padding:10px 14px}
-.mp-head .mp-ln{font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:800}
-.mp-head .mp-tot{font-size:24px;font-weight:800;font-family:'Barlow Condensed',sans-serif;color:#4fc3f7}
-.mp-body{padding:10px 14px}
-.mp-row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid #f0f2f5;font-size:11px}
-.mp-row:last-child{border-bottom:none}
-/* Modal */
-.moverlay{display:none;position:fixed;inset:0;background:rgba(0,0,30,0.55);z-index:300;align-items:flex-start;justify-content:center;padding:24px 12px;overflow-y:auto}
-.moverlay.open{display:flex}
-.mbox{background:#fff;border-radius:14px;padding:22px;width:min(580px,100%);border:1px solid var(--border)}
-.mbox h2{font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:800;color:var(--navy);margin-bottom:4px;letter-spacing:0.04em}
-.msub{font-size:12px;color:var(--gray);margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.fgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.fg{display:flex;flex-direction:column;gap:4px}
-.fg label{font-size:10px;color:var(--gray);font-weight:700;text-transform:uppercase;letter-spacing:0.06em}
-.fg input,.fg select{width:100%}
-.cprev{background:#f5f9ff;border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:12px}
-.crow{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px solid #eef0f4}
-.crow:last-child{border-bottom:none;font-weight:700}
-.crow .ck{color:var(--gray)}.crow .cv2{font-weight:700;color:var(--blue2)}.crow.ctot .cv2{color:var(--red)}
-.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
-.doverlay{display:none;position:fixed;inset:0;background:rgba(0,0,30,0.55);z-index:400;align-items:center;justify-content:center}
-.doverlay.open{display:flex}
-.dbox{background:#fff;border-radius:12px;padding:24px;width:min(290px,90vw);text-align:center}
-.dbox p{font-size:14px;font-weight:700;margin-bottom:4px}.dbox .dsub{font-size:12px;color:var(--gray);font-weight:400;margin-bottom:16px}
-.dbox .dacts{display:flex;gap:8px;justify-content:center}
-.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:#1a2636;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;z-index:500;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap}
-.toast.show{opacity:1}
-.empty{text-align:center;padding:44px;color:var(--gray);font-size:13px}
-.order-scroll{max-height:240px;overflow-y:auto;border-radius:8px;border:1px solid var(--border)}
-@media(max-width:700px){.two-col{grid-template-columns:1fr}.fgrid{grid-template-columns:1fr 1fr}.stat-row{grid-template-columns:1fr 1fr}.main{padding:10px}.ct-grid{grid-template-columns:1fr}}
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg: #0a0e14;
+    --surface: #111720;
+    --surface2: #1a2333;
+    --surface3: #1e2a3a;
+    --border: #253045;
+    --border2: #2e3d55;
+    --accent: #00d4ff;
+    --accent2: #0099cc;
+    --accent-dim: rgba(0,212,255,0.1);
+    --accent-dim2: rgba(0,212,255,0.05);
+    --green: #00e676;
+    --green-dim: rgba(0,230,118,0.1);
+    --yellow: #ffca28;
+    --yellow-dim: rgba(255,202,40,0.1);
+    --red: #ff5252;
+    --red-dim: rgba(255,82,82,0.1);
+    --orange: #ff9100;
+    --orange-dim: rgba(255,145,0,0.1);
+    --text: #e8edf5;
+    --text2: #8a9bb5;
+    --text3: #4a5a72;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --radius: 8px;
+    --radius2: 4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+  /* LAYOUT */
+  .app { display: flex; height: 100vh; }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo-tag {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--accent);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .logo-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    letter-spacing: -0.3px;
+  }
+
+  .sidebar-nav { padding: 12px 0; flex: 1; overflow-y: auto; }
+
+  .nav-section-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text3);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 18px 6px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 18px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 12.5px;
+    font-weight: 500;
+    transition: all 0.15s;
+    position: relative;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+  }
+
+  .nav-item:hover { color: var(--text); background: var(--accent-dim2); }
+
+  .nav-item.active {
+    color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .nav-item.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px; bottom: 4px;
+    width: 2px;
+    background: var(--accent);
+    border-radius: 0 2px 2px 0;
+  }
+
+  .nav-icon { width: 16px; height: 16px; opacity: 0.8; flex-shrink: 0; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(0,212,255,0.2);
+  }
+
+  .sidebar-footer {
+    padding: 14px 18px;
+    border-top: 1px solid var(--border);
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    animation: pulse-dot 2s infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .status-text { font-size: 11px; color: var(--text2); }
+
+  /* MAIN CONTENT */
+  .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+
+  .topbar-title { font-size: 14px; font-weight: 600; color: var(--text); flex: 1; }
+  .topbar-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    border-radius: var(--radius2);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+    font-family: var(--sans);
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover { background: #26ddff; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text2);
+    border: 1px solid var(--border2);
+  }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text3); background: var(--surface2); }
+
+  .btn-danger {
+    background: var(--red-dim);
+    color: var(--red);
+    border: 1px solid rgba(255,82,82,0.2);
+  }
+  .btn-danger:hover { background: rgba(255,82,82,0.2); }
+
+  /* PAGE */
+  .page { display: none; padding: 24px; flex: 1; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* GRID */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+
+  /* STAT CARDS */
+  .stat-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text);
+    font-family: var(--mono);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-sub { font-size: 11px; color: var(--text3); }
+
+  /* FORMS */
+  .form-row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 16px; }
+
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .form-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .form-control {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 8px 12px;
+    border-radius: var(--radius2);
+    font-family: var(--sans);
+    font-size: 12.5px;
+    outline: none;
+    transition: border-color 0.15s;
+    min-width: 140px;
+  }
+
+  .form-control:focus { border-color: var(--accent); }
+  .form-control option { background: var(--surface2); }
+
+  /* UPLOAD ZONE */
+  .upload-zone {
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: var(--accent-dim2);
+  }
+
+  .upload-zone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+  .upload-icon { color: var(--accent); margin-bottom: 10px; opacity: 0.7; }
+
+  .upload-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .upload-sub { font-size: 11px; color: var(--text3); }
+
+  /* TABLES */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius2); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  th {
+    background: var(--surface2);
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    font-weight: 500;
+  }
+
+  td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: middle;
+  }
+
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--accent-dim2); color: var(--text); }
+
+  .td-mono { font-family: var(--mono); font-size: 11px; }
+  .td-bold { font-weight: 600; color: var(--text); }
+
+  /* BADGES */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-blue { background: var(--accent-dim); color: var(--accent); border: 1px solid rgba(0,212,255,0.2); }
+  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(0,230,118,0.2); }
+  .badge-yellow { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(255,202,40,0.2); }
+  .badge-red { background: var(--red-dim); color: var(--red); border: 1px solid rgba(255,82,82,0.2); }
+  .badge-orange { background: var(--orange-dim); color: var(--orange); border: 1px solid rgba(255,145,0,0.2); }
+
+  /* PROGRESS BAR */
+  .progress-wrap { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+  .progress-bar { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+  .progress-green { background: var(--green); }
+  .progress-yellow { background: var(--yellow); }
+  .progress-orange { background: var(--orange); }
+  .progress-red { background: var(--red); }
+
+  /* LVC BAR */
+  .lvc-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .lvc-row:last-child { border-bottom: none; }
+  .lvc-label { width: 70px; font-family: var(--mono); font-size: 11px; color: var(--text2); flex-shrink: 0; }
+  .lvc-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 20px; overflow: hidden; position: relative; }
+  .lvc-bar-fill { height: 100%; border-radius: 4px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); position: relative; display: flex; align-items: center; padding-left: 8px; }
+  .lvc-bar-text { font-family: var(--mono); font-size: 10px; font-weight: 600; color: #000; white-space: nowrap; }
+  .lvc-pct { width: 52px; font-family: var(--mono); font-size: 12px; font-weight: 600; text-align: right; flex-shrink: 0; }
+  .lvc-detail { width: 160px; font-size: 11px; color: var(--text3); text-align: right; flex-shrink: 0; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+
+  .tab-btn {
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text3);
+    cursor: pointer;
+    border: none;
+    background: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: all 0.15s;
+    font-family: var(--sans);
+  }
+
+  .tab-btn:hover { color: var(--text2); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* MONTH LIST */
+  .month-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .month-item:hover { border-color: var(--accent); background: var(--accent-dim2); }
+  .month-item.selected { border-color: var(--accent); background: var(--accent-dim); }
+
+  .month-name { font-weight: 600; font-size: 13px; color: var(--text); }
+  .month-meta { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+
+  /* SHIFT TABLE */
+  .shift-config-table { width: 100%; }
+  .shift-config-table th { background: var(--surface3); }
+
+  .shift-input {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    padding: 5px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 12px;
+    width: 60px;
+    outline: none;
+    text-align: center;
+  }
+  .shift-input:focus { border-color: var(--accent); }
+
+  /* CHECKBOX TOGGLE */
+  .toggle-wrap { display: flex; align-items: center; gap: 10px; }
+  .toggle { position: relative; width: 36px; height: 18px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0;
+    background: var(--border2);
+    border-radius: 9px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 12px; height: 12px;
+    left: 3px; top: 3px;
+    background: var(--text3);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--accent-dim); }
+  .toggle input:checked + .toggle-slider::before { background: var(--accent); transform: translateX(18px); }
+
+  /* ALERT */
+  .alert {
+    padding: 12px 16px;
+    border-radius: var(--radius2);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .alert-info { background: var(--accent-dim); border: 1px solid rgba(0,212,255,0.2); color: var(--accent); }
+  .alert-warning { background: var(--yellow-dim); border: 1px solid rgba(255,202,40,0.2); color: var(--yellow); }
+  .alert-success { background: var(--green-dim); border: 1px solid rgba(0,230,118,0.2); color: var(--green); }
+  .alert-error { background: var(--red-dim); border: 1px solid rgba(255,82,82,0.2); color: var(--red); }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text3);
+  }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; opacity: 0.4; }
+  .empty-title { font-size: 14px; color: var(--text2); margin-bottom: 6px; }
+  .empty-sub { font-size: 12px; }
+
+  /* SEPARATOR */
+  .sep { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
+
+  /* TOAST */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toast {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 12.5px;
+    color: var(--text);
+    min-width: 260px;
+    max-width: 360px;
+    animation: slide-in 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .toast.success { border-left: 3px solid var(--green); }
+  .toast.error { border-left: 3px solid var(--red); }
+  .toast.info { border-left: 3px solid var(--accent); }
+  .toast.warning { border-left: 3px solid var(--yellow); }
+
+  @keyframes slide-in {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* MP SECTION */
+  .mp-placeholder {
+    background: var(--surface2);
+    border: 2px dashed var(--border2);
+    border-radius: var(--radius);
+    padding: 32px;
+    text-align: center;
+  }
+
+  /* DIVIDER WITH TEXT */
+  .divider-text {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text3);
+    font-size: 11px;
+    font-family: var(--mono);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin: 16px 0;
+  }
+  .divider-text::before, .divider-text::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid var(--border);
+  }
+
+  /* SCROLL TABLE */
+  .table-scroll { max-height: 360px; overflow-y: auto; }
+
+  /* INLINE EDIT */
+  .editable-cell {
+    background: var(--surface2);
+    border: 1px solid transparent;
+    padding: 4px 8px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    outline: none;
+    width: 100%;
+    transition: border-color 0.15s;
+  }
+  .editable-cell:focus { border-color: var(--accent); }
+
+  /* RESPONSIVE */
+  @media (max-width: 900px) {
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
+<div class="app">
 
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <svg width="56" height="38" viewBox="0 0 112 76" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="4" y="18" width="104" height="52" rx="7" fill="#f0f4f8" stroke="#c0cad6" stroke-width="1.5"/>
-        <rect x="4" y="18" width="104" height="22" rx="6" fill="#003087"/>
-        <rect x="4" y="32" width="104" height="8" fill="#003087"/>
-        <rect x="20" y="7" width="15" height="14" rx="3.5" fill="#e53935"/>
-        <rect x="77" y="7" width="15" height="14" rx="3.5" fill="#263238"/>
-        <rect x="23" y="3" width="9" height="7" rx="2" fill="#ef9a9a"/>
-        <rect x="80" y="3" width="9" height="7" rx="2" fill="#546e7a"/>
-        <rect x="10" y="42" width="92" height="22" rx="4" fill="white"/>
-        <text x="56" y="58" text-anchor="middle" font-family="Arial Black,sans-serif" font-size="15" font-weight="900" fill="#003087" letter-spacing="2.5">INCOE</text>
-        <rect x="10" y="62" width="92" height="4" rx="2" fill="#003087"/>
-        <line x1="22" y1="21" x2="22" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
-        <line x1="38" y1="21" x2="38" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
-        <line x1="56" y1="21" x2="56" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
-        <line x1="74" y1="21" x2="74" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
-        <line x1="90" y1="21" x2="90" y2="33" stroke="rgba(255,255,255,0.25)" stroke-width="1.2"/>
-      </svg>
-      <div>
-        <div class="brand-title">Battery Manufacturing</div>
-        <div class="brand-sub">Battery Manufacturing Optimization</div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-tag">BPMS v1.0</div>
+      <div class="logo-title">Battery Production<br>Management System</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Database</div>
+      <button class="nav-item" onclick="showPage('db-line')" id="nav-db-line">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+        Database LINE
+      </button>
+      <button class="nav-item" onclick="showPage('db-pcs')" id="nav-db-pcs">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        Database PCS
+      </button>
+
+      <div class="nav-section-label">Data Order</div>
+      <button class="nav-item" onclick="showPage('upload-order')" id="nav-upload-order">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+        Upload Order
+      </button>
+      <button class="nav-item" onclick="showPage('order-list')" id="nav-order-list">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Data Order
+        <span class="nav-badge" id="badge-orders">0</span>
+      </button>
+
+      <div class="nav-section-label">Analisis</div>
+      <button class="nav-item" onclick="showPage('lvc')" id="nav-lvc">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        LVC
+      </button>
+      <button class="nav-item" onclick="showPage('capacity')" id="nav-capacity">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        Setting Kapasitas
+      </button>
+      <button class="nav-item" onclick="showPage('mp')" id="nav-mp">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Man Power
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <span class="status-dot"></span>
+      <span class="status-text">LocalStorage Active</span>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ==================== PAGE: DB LINE ==================== -->
+    <div id="page-db-line" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Database LINE</div>
+          <div class="topbar-sub">Mapping ITEM prefix → Production Line</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost" onclick="exportDbLine()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export
+          </button>
+          <button class="btn btn-primary" onclick="document.getElementById('file-db-line').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Upload Excel
+          </button>
+          <input type="file" id="file-db-line" accept=".xlsx,.xls" style="display:none" onchange="uploadDbLine(this)">
+        </div>
+      </div>
+
+      <div style="padding:24px">
+        <div class="alert alert-info">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Format Excel: Kolom A = nama LINE, Kolom B = ITEM prefix. Tiap baris = 1 mapping. Contoh: A1="LINE 5", B1="F-ACDP-48D26RX-A9C3"
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">
+              <div class="card-title-dot"></div>
+              Data LINE
+            </div>
+            <span id="db-line-count" class="badge badge-blue">0 records</span>
+          </div>
+
+          <div id="db-line-empty" class="empty-state">
+            <div class="empty-icon">🗄️</div>
+            <div class="empty-title">Belum ada data LINE</div>
+            <div class="empty-sub">Upload file Excel untuk memulai</div>
+          </div>
+
+          <div id="db-line-table-wrap" style="display:none">
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="db-line-summary"></div>
+            <div class="table-wrap table-scroll">
+              <table>
+                <thead>
+                  <tr><th>#</th><th>LINE</th><th>ITEM Prefix</th><th>Action</th></tr>
+                </thead>
+                <tbody id="db-line-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-</div>
 
-<div class="nav">
-  <div class="nav-inner">
-    <button class="nav-btn active" onclick="setPage('ct',this)">⏱ Cycle Time</button>
-    <button class="nav-btn" onclick="setPage('cap',this)">📊 Capacity</button>
-    <button class="nav-btn" onclick="setPage('lvc',this)">⚖ Loading vs Capacity</button>
-    <button class="nav-btn" onclick="setPage('mp',this)">👷 Man Power Calculator</button>
-  </div>
-</div>
-
-<div class="main">
-
-<!-- PAGE: CYCLE TIME -->
-<div class="page active" id="page-ct">
-  <div class="stat-row" id="ct-stats"></div>
-  <div class="toolbar">
-    <div class="sw"><span class="sico">⌕</span><input type="text" id="ct-search" placeholder="Cari nama proses..." oninput="renderCT()"></div>
-    <select id="ct-lf" onchange="renderCT()"><option value="">Semua Line</option></select>
-    <button class="btn primary" onclick="openCTModal()">+ Tambah Proses</button>
-  </div>
-  <div class="ct-grid" id="ct-grid"></div>
-</div>
-
-<!-- PAGE: CAPACITY -->
-<div class="page" id="page-cap">
-  <div class="formula-bar">
-    <div class="ftitle">Formula Otomatis:</div>
-    <span class="fml">BATT/H = 3600 ÷ CT(s)</span>
-    <span class="fml">S1 = 435 × 60 ÷ CT(s)</span>
-    <span class="fml">S2 = 405 × 60 ÷ CT(s)</span>
-    <span class="fml">S3 = 370 × 60 ÷ CT(s)</span>
-    <span class="fml">TOTAL = S1+S2+S3</span>
-  </div>
-  <div class="stat-row" id="cap-stats"></div>
-  <div class="toolbar">
-    <div class="sw"><span class="sico">⌕</span><input type="text" id="cap-search" placeholder="Cari battery type, group..." oninput="renderCap()"></div>
-    <select id="cap-tech" onchange="renderCap()"><option value="">Semua Technology</option><option>CONVENTIONAL</option><option>AGM</option><option>EFB</option><option>Li-Ion</option></select>
-    <select id="cap-group" onchange="renderCap()"><option value="">Semua Group</option></select>
-    <select id="cap-line" onchange="renderCap()"><option value="">Semua Line</option></select>
-    <button class="btn success" onclick="exportCapCSV()">↓ Export CSV</button>
-    <button class="btn primary" onclick="openCapModal()">+ Tambah</button>
-  </div>
-  <div class="tbl-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th class="th-top" colspan="2">BATTERY</th>
-          <th class="th-top">TYPE</th><th class="th-top">PLATE</th>
-          <th class="th-top">SEP</th><th class="th-top">SPACER</th>
-          <th class="th-top" colspan="7">PRODUCTION CAPACITY STANDARD (PCS)</th>
-          <th class="th-top" rowspan="2" style="vertical-align:middle">AKSI</th>
-        </tr>
-        <tr>
-          <th class="th-s" onclick="csort('technology',this)">TECHNOLOGY</th>
-          <th class="th-s" onclick="csort('group',this)">GROUP</th>
-          <th class="th-s" onclick="csort('battery_type',this)">TYPE</th>
-          <th class="th-s" onclick="csort('plate',this)">PLATE</th>
-          <th class="th-s">SEP</th><th class="th-s">SPACER</th>
-          <th class="th-s" onclick="csort('line',this)">LINE</th>
-          <th class="th-s" onclick="csort('ct',this)">CT(s)<span class="thf">input</span></th>
-          <th class="th-s" onclick="csort('batt_h',this)">BATT/H<span class="thf">3600÷CT</span></th>
-          <th class="th-s" onclick="csort('s1',this)">S1<span class="thf">435×60÷CT</span></th>
-          <th class="th-s" onclick="csort('s2',this)">S2<span class="thf">405×60÷CT</span></th>
-          <th class="th-s" onclick="csort('s3',this)">S3<span class="thf">370×60÷CT</span></th>
-          <th class="th-s" onclick="csort('total',this)">TOTAL<span class="thf">S1+S2+S3</span></th>
-        </tr>
-      </thead>
-      <tbody id="cap-body"></tbody>
-    </table>
-  </div>
-  <div id="cap-empty" class="empty" style="display:none">Tidak ada data.</div>
-  <div class="tbl-foot" id="cap-foot"></div>
-</div>
-
-<!-- PAGE: LOADING VS CAPACITY -->
-<div class="page" id="page-lvc">
-  <div class="two-col">
-    <div class="card">
-      <div class="card-title">Import Data Order</div>
-      <div class="upload-zone" id="uzone" onclick="document.getElementById('ofile').click()">
-        <div id="uico" class="upload-ico">📂</div>
-        <div class="upload-txt" id="utxt"><strong>Klik untuk upload</strong> Excel atau CSV<br><small style="color:#aaa">Kolom: Battery Type · Line · Qty Order</small></div>
-        <input type="file" id="ofile" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleUpload(this)">
+    <!-- ==================== PAGE: DB PCS ==================== -->
+    <div id="page-db-pcs" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Database PCS</div>
+          <div class="topbar-sub">Production Capacity Standard</div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary" onclick="document.getElementById('file-db-pcs').click()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            Upload PCS Excel
+          </button>
+          <input type="file" id="file-db-pcs" accept=".xlsx,.xls" style="display:none" onchange="uploadDbPCS(this)">
+        </div>
       </div>
-      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn sm" onclick="dlTemplate()">↓ Template</button>
-        <button class="btn sm primary" onclick="useSample()">Gunakan Contoh</button>
-        <button class="btn sm danger" id="clear-btn" onclick="clearOrders()" style="display:none">✕ Hapus Data</button>
+
+      <div style="padding:24px">
+        <div class="alert alert-info">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Format Excel PCS: Technology | Group | Type | Plate | Separator | Spacer | Line | CT(s) | Battery/Hour | Kap.S1 | Kap.S2 | Kap.S3 | Total Kap
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-dot"></div>Data PCS</div>
+            <span id="db-pcs-count" class="badge badge-blue">0 records</span>
+          </div>
+
+          <div id="db-pcs-empty" class="empty-state">
+            <div class="empty-icon">⚙️</div>
+            <div class="empty-title">Belum ada data PCS</div>
+            <div class="empty-sub">Upload file Excel PCS untuk memulai</div>
+          </div>
+
+          <div id="db-pcs-table-wrap" style="display:none">
+            <div class="table-wrap table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th><th>Technology</th><th>Group</th><th>Type</th>
+                    <th>Plate</th><th>Separator</th><th>Spacer</th><th>Line</th>
+                    <th>CT (s)</th><th>Bat/Hr</th><th>Kap S1</th><th>Kap S2</th><th>Kap S3</th><th>Total</th>
+                  </tr>
+                </thead>
+                <tbody id="db-pcs-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title">Pengaturan</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
-        <div class="fg"><label>Shift Aktif</label>
-          <select id="shift-sel" onchange="renderLVC()">
-            <option value="1">1 Shift</option><option value="2">2 Shift</option><option value="3" selected>3 Shift</option>
+
+    <!-- ==================== PAGE: UPLOAD ORDER ==================== -->
+    <div id="page-upload-order" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Upload Data Order</div>
+          <div class="topbar-sub">Import file Excel loading/order</div>
+        </div>
+      </div>
+
+      <div style="padding:24px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-dot"></div>Form Upload Order</div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Bulan</label>
+              <select class="form-control" id="order-month">
+                <option value="1">Januari</option><option value="2">Februari</option>
+                <option value="3">Maret</option><option value="4">April</option>
+                <option value="5">Mei</option><option value="6">Juni</option>
+                <option value="7">Juli</option><option value="8">Agustus</option>
+                <option value="9">September</option><option value="10">Oktober</option>
+                <option value="11">November</option><option value="12">Desember</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tahun</label>
+              <input type="number" class="form-control" id="order-year" value="2025" min="2020" max="2030" style="width:100px">
+            </div>
+          </div>
+
+          <div class="upload-zone" id="drop-zone-order"
+            ondragover="event.preventDefault();this.classList.add('dragover')"
+            ondragleave="this.classList.remove('dragover')"
+            ondrop="handleDrop(event,'order')">
+            <input type="file" accept=".xlsx,.xls" onchange="uploadOrder(this)" id="file-order-input">
+            <div class="upload-icon">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+            </div>
+            <div class="upload-title">Drag & drop file Excel atau klik untuk pilih</div>
+            <div class="upload-sub">Format: .xlsx / .xls — Kolom A-L, mulai baris 1</div>
+          </div>
+
+          <div class="alert alert-info" style="margin-top:16px">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Urutan kolom: NAME_CUSTOMER | NO_SDF | ITEM | Brand Battery | Variance Battery | QTY_ORDER | QTY_DELIVERY | Deviasi | Stock_FG | Deviasi+Stock | STOCK_PROD2 | STOCK_WET
+          </div>
+        </div>
+
+        <div id="upload-preview" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Preview Data</div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-ghost" onclick="cancelUpload()">Batal</button>
+                <button class="btn btn-primary" onclick="confirmUpload()">Simpan Data</button>
+              </div>
+            </div>
+            <div id="preview-info" style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap"></div>
+            <div class="table-wrap table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th><th>NAME_CUSTOMER</th><th>NO_SDF</th><th>ITEM</th><th>Brand</th>
+                    <th>Variance</th><th>QTY_ORDER</th><th>QTY_DELIVERY</th><th>Deviasi</th>
+                    <th>Stock_FG</th><th>Dev+Stock</th><th>STOCK_PROD2</th><th>STOCK_WET</th>
+                  </tr>
+                </thead>
+                <tbody id="preview-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PAGE: ORDER LIST ==================== -->
+    <div id="page-order-list" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Data Order</div>
+          <div class="topbar-sub">Semua data order tersimpan</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="form-control" id="filter-order-period" onchange="renderOrderList()" style="min-width:160px">
+            <option value="">-- Semua Periode --</option>
           </select>
         </div>
-        <div class="fg"><label>Filter Line</label>
-          <select id="lvc-lf" onchange="renderLVC()"><option value="">Semua Line</option></select>
+      </div>
+
+      <div style="padding:24px">
+        <div id="order-list-empty" class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Belum ada data order</div>
+          <div class="empty-sub">Upload data order terlebih dahulu</div>
+        </div>
+
+        <div id="order-list-content" style="display:none">
+          <div class="grid-4" id="order-stats" style="margin-bottom:16px"></div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Detail Order</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <input class="form-control" type="text" placeholder="Cari ITEM / Customer..." id="search-order" oninput="filterOrderTable()" style="width:220px">
+                <button class="btn btn-danger btn-sm" onclick="deleteCurrentPeriod()">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>
+                  Hapus Periode
+                </button>
+              </div>
+            </div>
+            <div class="table-wrap table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th><th>ITEM</th><th>Customer</th><th>LINE</th>
+                    <th>QTY Order</th><th>QTY Delivery</th><th>Deviasi</th><th>Stock FG</th>
+                    <th>Technology</th><th>Plate</th><th>Separator</th>
+                  </tr>
+                </thead>
+                <tbody id="order-detail-tbody"></tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="stat-row" id="lvc-sum" style="grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:0"></div>
     </div>
-  </div>
-  <div class="card" id="order-card" style="display:none">
-    <div class="card-title">Data Order</div>
-    <div class="order-scroll">
-      <table><thead><tr>
-        <th class="th-s">No</th><th class="th-s">Battery Type</th>
-        <th class="th-s">Line</th><th class="th-s">Qty Order</th>
-        <th class="th-s">Kapasitas (Shift)</th><th class="th-s">Utilization</th><th class="th-s">Status</th>
-      </tr></thead><tbody id="order-body"></tbody></table>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Loading vs Capacity per Line</div>
-    <div class="chart-wrap"><canvas id="lvc-chart"></canvas></div>
-  </div>
-  <div class="card">
-    <div class="card-title">Utilization per Line</div>
-    <div class="util-grid" id="util-grid"></div>
-  </div>
-</div>
 
-<!-- PAGE: MAN POWER -->
-<div class="page" id="page-mp">
-  <div class="two-col" style="align-items:start">
-    <div class="card">
-      <div class="card-title">Parameter Perhitungan</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
-        <div class="fg"><label>Efisiensi (%)</label><input type="number" id="mp-eff" value="85" min="1" max="100" onchange="calcMP()"></div>
-        <div class="fg"><label>Menit Kerja / Shift</label><input type="number" id="mp-wt" value="435" min="60" max="600" onchange="calcMP()"></div>
-        <div class="fg"><label>Shift</label>
-          <select id="mp-sh" onchange="calcMP()"><option value="1">1 Shift</option><option value="2">2 Shift</option><option value="3" selected>3 Shift</option></select>
+    <!-- ==================== PAGE: SETTING KAPASITAS ==================== -->
+    <div id="page-capacity" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Setting Kapasitas</div>
+          <div class="topbar-sub">Konfigurasi hari kerja & shift per LINE per periode</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="form-control" id="cap-period-select" onchange="loadCapacityForPeriod()" style="min-width:160px">
+            <option value="">-- Pilih Periode --</option>
+          </select>
+          <button class="btn btn-primary" onclick="saveCapacity()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Simpan
+          </button>
         </div>
       </div>
-      <div style="background:#f5f9ff;border-radius:8px;padding:12px;font-size:12px;color:var(--gray);border:1px solid var(--border)">
-        <strong style="color:var(--navy)">Formula MP per proses:</strong><br>
-        MP = CEIL ( Qty Target × CT(s) ) ÷ ( Menit × 60 × Efisiensi × Shift )
+
+      <div style="padding:24px">
+        <div id="cap-no-period" class="empty-state">
+          <div class="empty-icon">📅</div>
+          <div class="empty-title">Pilih periode terlebih dahulu</div>
+          <div class="empty-sub">Pilih periode order yang ingin dikonfigurasi kapasitasnya</div>
+        </div>
+
+        <div id="cap-content" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Konfigurasi Shift per LINE</div>
+            </div>
+            <div class="alert alert-warning">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              Hari kerja yang diisi = jumlah hari kerja produksi. Shift diisi 0 = tidak aktif. Jam kerja: Shift 1 = 435 menit, Shift 2 = 405 menit, Shift 3 = 370 menit.
+            </div>
+            <div class="table-wrap">
+              <table class="shift-config-table">
+                <thead>
+                  <tr>
+                    <th>LINE</th>
+                    <th>Hari Kerja</th>
+                    <th>Shift 1 Aktif</th>
+                    <th>Shift 2 Aktif</th>
+                    <th>Shift 3 Aktif</th>
+                    <th>Total Kapasitas (unit)</th>
+                  </tr>
+                </thead>
+                <tbody id="cap-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="card" style="text-align:center">
-      <div class="card-title">Total Kebutuhan</div>
-      <div style="font-family:'Barlow Condensed',sans-serif;font-size:64px;font-weight:800;color:var(--navy);line-height:1" id="mp-big">0</div>
-      <div style="font-size:13px;color:var(--gray);margin-top:4px">Operator</div>
-      <div style="font-size:12px;color:var(--gray);margin-top:8px" id="mp-info">Upload data order terlebih dahulu</div>
-    </div>
-  </div>
-  <div class="card">
-    <div class="card-title">Kebutuhan Man Power per Line & Proses</div>
-    <div id="mp-empty" class="empty">Belum ada data order. Upload di menu Loading vs Capacity.</div>
-    <div class="mp-grid" id="mp-grid" style="display:none"></div>
-  </div>
-</div>
 
-</div><!-- end main -->
-
-<!-- MODALS -->
-<div class="moverlay" id="cap-modal">
-  <div class="mbox">
-    <h2 id="cap-mtitle">Tambah Data Capacity</h2>
-    <div class="msub">CT (s) diisi manual — BATT/H, S1, S2, S3, Total dihitung otomatis.</div>
-    <div class="fgrid">
-      <div class="fg"><label>Technology *</label><select id="cm-tech"><option value="">Pilih...</option><option>CONVENTIONAL</option><option>AGM</option><option>EFB</option><option>Li-Ion</option></select></div>
-      <div class="fg"><label>Group *</label><input type="text" id="cm-grp" placeholder="NS40"></div>
-      <div class="fg"><label>Battery Type *</label><input type="text" id="cm-type" placeholder="NS40"></div>
-      <div class="fg"><label>Plate</label><input type="number" id="cm-plate" min="0"></div>
-      <div class="fg"><label>Separator</label><input type="text" id="cm-sep" placeholder="PE"></div>
-      <div class="fg"><label>Spacer</label><input type="text" id="cm-spc" placeholder="1 atau -"></div>
-      <div class="fg"><label>Line</label><input type="number" id="cm-line" min="1"></div>
-      <div class="fg"><label>CT (s) *</label><input type="number" id="cm-ct" step="0.1" min="0.1" oninput="prevCap()"></div>
-      <div class="fg" style="align-self:end"><div style="background:var(--blue-light);border-radius:6px;padding:8px;font-size:10px;color:var(--navy);font-weight:700;text-align:center;text-transform:uppercase;letter-spacing:0.05em">Otomatis dari CT</div></div>
-    </div>
-    <div class="cprev">
-      <div style="font-size:10px;font-weight:700;color:var(--gray);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.07em">Preview</div>
-      <div class="crow"><span class="ck">BATT/H = 3600 ÷ CT</span><span class="cv2" id="pv-bh">—</span></div>
-      <div class="crow"><span class="ck">S1 = 435×60 ÷ CT</span><span class="cv2" id="pv-s1">—</span></div>
-      <div class="crow"><span class="ck">S2 = 405×60 ÷ CT</span><span class="cv2" id="pv-s2">—</span></div>
-      <div class="crow"><span class="ck">S3 = 370×60 ÷ CT</span><span class="cv2" id="pv-s3">—</span></div>
-      <div class="crow ctot"><span class="ck">TOTAL = S1+S2+S3</span><span class="cv2" id="pv-tot">—</span></div>
-    </div>
-    <div class="mactions"><button class="btn" onclick="closeCapM()">Batal</button><button class="btn primary" onclick="saveCap()">Simpan</button></div>
-  </div>
-</div>
-
-<div class="moverlay" id="ct-modal">
-  <div class="mbox">
-    <h2 id="ct-mtitle">Tambah Proses</h2>
-    <div class="msub">Cycle time per proses di setiap line assembling.</div>
-    <div class="fgrid">
-      <div class="fg"><label>Line *</label>
-        <select id="ctm-line"><option value="">Pilih...</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
+    <!-- ==================== PAGE: LVC ==================== -->
+    <div id="page-lvc" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Loading vs Capacity (LVC)</div>
+          <div class="topbar-sub">Analisis beban produksi vs kapasitas</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="form-control" id="lvc-period-select" onchange="calculateLVC()" style="min-width:160px">
+            <option value="">-- Pilih Periode --</option>
+          </select>
+          <button class="btn btn-ghost" onclick="exportLVC()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Export
+          </button>
+        </div>
       </div>
-      <div class="fg"><label>Nama Proses *</label><input type="text" id="ctm-name" placeholder="misal: Casting"></div>
-      <div class="fg"><label>CT (detik) *</label><input type="number" id="ctm-ct" step="0.1" min="0.1" placeholder="18.5"></div>
+
+      <div style="padding:24px">
+        <div id="lvc-no-data" class="empty-state">
+          <div class="empty-icon">📊</div>
+          <div class="empty-title">Pilih periode untuk melihat LVC</div>
+          <div class="empty-sub">Pastikan data order, database LINE, PCS, dan setting kapasitas sudah diisi</div>
+        </div>
+
+        <div id="lvc-content" style="display:none">
+          <div class="grid-4" id="lvc-summary-stats" style="margin-bottom:16px"></div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Loading vs Capacity per LINE</div>
+            </div>
+            <div id="lvc-bars"></div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Detail per LINE</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>LINE</th><th>Total Order (unit)</th><th>Processing Time (jam)</th>
+                    <th>Kapasitas (jam)</th><th>Loading %</th><th>Status</th>
+                    <th>Shift Config</th>
+                  </tr>
+                </thead>
+                <tbody id="lvc-detail-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:16px">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Item tanpa data PCS / LINE</div>
+            </div>
+            <div id="lvc-unmapped" class="empty-state" style="padding:16px">
+              <div class="empty-sub">Semua item terpetakan ✓</div>
+            </div>
+            <div id="lvc-unmapped-table" style="display:none">
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>ITEM</th><th>QTY</th><th>Masalah</th></tr></thead>
+                  <tbody id="lvc-unmapped-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-    <div class="mactions"><button class="btn" onclick="closeCTM()">Batal</button><button class="btn primary" onclick="saveCT()">Simpan</button></div>
-  </div>
+
+    <!-- ==================== PAGE: MAN POWER ==================== -->
+    <div id="page-mp" class="page">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">Man Power Calculator</div>
+          <div class="topbar-sub">Rekomendasi kebutuhan tenaga kerja</div>
+        </div>
+        <div class="topbar-actions">
+          <select class="form-control" id="mp-period-select" onchange="calculateMP()" style="min-width:160px">
+            <option value="">-- Pilih Periode --</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="padding:24px">
+        <div class="alert alert-warning">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          Rumus Man Power belum dikonfigurasi. Silakan input parameter kebutuhan MP per LINE di bawah, kemudian sistem akan menghitung otomatis setelah rumus final diberikan.
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-dot"></div>Parameter MP per LINE</div>
+            <button class="btn btn-primary" onclick="saveMPParams()">Simpan Parameter</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>LINE</th>
+                  <th>MP Std / Shift (orang)</th>
+                  <th>MP Loader / Shift</th>
+                  <th>MP QC / Shift</th>
+                  <th>Keterangan</th>
+                </tr>
+              </thead>
+              <tbody id="mp-param-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="mp-result-section" style="display:none">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Rekomendasi Man Power</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>LINE</th><th>Shift Aktif</th><th>MP Std</th>
+                    <th>MP Loader</th><th>MP QC</th><th>Total MP</th><th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="mp-result-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-<div class="doverlay" id="del-ov">
-  <div class="dbox"><p>Hapus data ini?</p><p class="dsub">Tidak bisa dibatalkan.</p>
-    <div class="dacts"><button class="btn" onclick="document.getElementById('del-ov').classList.remove('open')">Batal</button><button class="btn danger" onclick="doDel()">Hapus</button></div>
-  </div>
-</div>
-<div class="toast" id="toast"></div>
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toast-container"></div>
 
 <script>
-// ===== CONSTANTS =====
-const S1M=435,S2M=405,S3M=370;
-function cc(ct){if(!ct||ct<=0)return{batt_h:0,s1:0,s2:0,s3:0,total:0};const b=Math.floor(3600/ct),s1=Math.floor(S1M*60/ct),s2=Math.floor(S2M*60/ct),s3=Math.floor(S3M*60/ct);return{batt_h:b,s1,s2,s3,total:s1+s2+s3}}
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  dbLine: [],        // [{line, prefix}]
+  dbPCS: [],         // [{technology, group, type, plate, separator, spacer, line, ct, batPerHour, kapS1, kapS2, kapS3, totalKap}]
+  orders: {},        // { "2025-01": [{...row data...}] }
+  capacity: {},      // { "2025-01": { "LINE 5": {workDays:22, s1:1, s2:1, s3:0} } }
+  mpParams: {},      // { "LINE 5": {std:3, loader:1, qc:1, note:""} }
+  pendingUpload: null,
+  pendingPeriod: null,
+};
 
-// ===== SAMPLE CT DATA — 23 processes × 7 lines =====
-const PROCS=['Grid Casting','Paste Mixing','Pasting','Flash Drying','Curing','Cutting & Stacking','Lug Brushing','COS','Assembly','Insertion','Cover Sealing','Terminal Burning','Leak Test','Formation Charge','Final Discharge','Acid Filling','Sealing','Washing','Labeling','Final Inspection','Packing','OCV Test','Dispatch'];
-const PBASE=[18,45,22,15,180,28,12,35,40,20,25,30,8,480,240,15,12,10,8,12,15,5,10];
-function genCT(){let d=[],id=1;for(let ln=1;ln<=7;ln++){PROCS.forEach((p,i)=>{const f=0.85+Math.random()*0.35;d.push({id:id++,line:ln,process:p,ct:+(PBASE[i]*f).toFixed(1)})})}return d}
-
-// ===== CAP DATA =====
-const CAPRAW=[
-  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:7,separator:"PE",spacer:"1",line:1,ct:22.5},
-  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:9,separator:"PE",spacer:"-",line:1,ct:22.5},
-  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:10,separator:"PE",spacer:"-",line:1,ct:22.5},
-  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:11,separator:"PE",spacer:"-",line:1,ct:22.5},
-  {technology:"CONVENTIONAL",group:"NS40",battery_type:"NS40",plate:12,separator:"PE",spacer:"-",line:1,ct:22.5},
-  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:9,separator:"PE",spacer:"2",line:3,ct:25.3},
-  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:11,separator:"PE",spacer:"2",line:3,ct:25.3},
-  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:13,separator:"PE",spacer:"-",line:3,ct:25.3},
-  {technology:"CONVENTIONAL",group:"NS60",battery_type:"NS60",plate:15,separator:"PE",spacer:"-",line:3,ct:29.2},
-  {technology:"CONVENTIONAL",group:"55D23",battery_type:"55D23",plate:9,separator:"PE",spacer:"2",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"55D23",battery_type:"55D23",plate:11,separator:"PE",spacer:"2",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"55D23",battery_type:"55D23",plate:12,separator:"PE",spacer:"-",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:7,separator:"PE",spacer:"2",line:2,ct:22.0},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:9,separator:"PE",spacer:"-",line:5,ct:22.1},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:11,separator:"PE",spacer:"-",line:5,ct:22.1},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:12,separator:"PE",spacer:"-",line:5,ct:22.1},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:13,separator:"PE",spacer:"-",line:5,ct:22.1},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:14,separator:"PE",spacer:"-",line:5,ct:23.9},
-  {technology:"CONVENTIONAL",group:"N50",battery_type:"N50",plate:15,separator:"PE",spacer:"-",line:5,ct:25.6},
-  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:11,separator:"PE",spacer:"-",line:6,ct:23.4},
-  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:13,separator:"PE",spacer:"-",line:6,ct:23.4},
-  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:15,separator:"PE",spacer:"2",line:6,ct:25.6},
-  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:16,separator:"PE",spacer:"-",line:6,ct:27.3},
-  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:17,separator:"PE",spacer:"-",line:6,ct:29.0},
-  {technology:"CONVENTIONAL",group:"N70",battery_type:"N70",plate:18,separator:"PE",spacer:"-",line:6,ct:30.7},
-  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:15,separator:"PE",spacer:"2",line:2,ct:35.8},
-  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:17,separator:"PE",spacer:"2",line:2,ct:35.8},
-  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:20,separator:"PE",spacer:"2",line:2,ct:40.9},
-  {technology:"CONVENTIONAL",group:"N100",battery_type:"N100",plate:21,separator:"PE",spacer:"-",line:2,ct:40.9},
-  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:19,separator:"PE",spacer:"2",line:4,ct:48.0},
-  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:21,separator:"PE",spacer:"2",line:4,ct:50.0},
-  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:24,separator:"PE",spacer:"2",line:4,ct:52.0},
-  {technology:"CONVENTIONAL",group:"N120",battery_type:"N120",plate:25,separator:"PE",spacer:"-",line:4,ct:53.0},
-  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:23,separator:"PE",spacer:"2",line:4,ct:53.0},
-  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:25,separator:"PE",spacer:"2",line:4,ct:55.0},
-  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:27,separator:"PE",spacer:"2",line:4,ct:58.0},
-  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:30,separator:"PE",spacer:"2",line:4,ct:64.0},
-  {technology:"CONVENTIONAL",group:"N150",battery_type:"N150",plate:31,separator:"PE",spacer:"2",line:4,ct:68.0},
-  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:31,separator:"PE",spacer:"2",line:7,ct:71.6},
-  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:33,separator:"PE",spacer:"2",line:7,ct:76.4},
-  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:35,separator:"PE",spacer:"2",line:7,ct:77.9},
-  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:37,separator:"PE",spacer:"2",line:7,ct:82.2},
-  {technology:"CONVENTIONAL",group:"N200",battery_type:"N200",plate:41,separator:"PE",spacer:"-",line:7,ct:86.5},
-  {technology:"CONVENTIONAL",group:"545",battery_type:"545-19",plate:11,separator:"PE",spacer:"2",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"545",battery_type:"562-05",plate:14,separator:"PE",spacer:"-",line:7,ct:57.1},
-  {technology:"CONVENTIONAL",group:"545",battery_type:"544-59",plate:7,separator:"PE",spacer:"2",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"545",battery_type:"544-64",plate:9,separator:"PE",spacer:"2",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"555",battery_type:"555-30",plate:9,separator:"PE",spacer:"2",line:7,ct:28.0},
-  {technology:"CONVENTIONAL",group:"555",battery_type:"555-59",plate:11,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"555",battery_type:"555-65",plate:12,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"555",battery_type:"562-19",plate:13,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"566",battery_type:"566-33",plate:11,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"566",battery_type:"566-33",plate:13,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"566",battery_type:"574-12",plate:14,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"566",battery_type:"566-38",plate:15,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"566",battery_type:"580-24",plate:15,separator:"PE",spacer:"2",line:7,ct:35.0},
-  {technology:"CONVENTIONAL",group:"588",battery_type:"588-21",plate:15,separator:"PE",spacer:"2",line:7,ct:34.6},
-  {technology:"CONVENTIONAL",group:"588",battery_type:"588-21",plate:17,separator:"PE",spacer:"2",line:7,ct:34.6},
-  {technology:"CONVENTIONAL",group:"588",battery_type:"588-27",plate:18,separator:"PE",spacer:"2",line:7,ct:34.6},
-  {technology:"CONVENTIONAL",group:"588",battery_type:"600-38",plate:21,separator:"PE",spacer:"1",line:7,ct:40.5},
-  {technology:"CONVENTIONAL",group:"DIN A",battery_type:"620-34",plate:25,separator:"PE",spacer:"2",line:7,ct:94.5},
-  {technology:"CONVENTIONAL",group:"DIN B",battery_type:"650-38",plate:31,separator:"PE",spacer:"2",line:7,ct:94.5},
-  {technology:"CONVENTIONAL",group:"DIN B",battery_type:"670-18",plate:35,separator:"PE",spacer:"-",line:7,ct:94.5},
-  {technology:"CONVENTIONAL",group:"DIN-C",battery_type:"700-27",plate:41,separator:"PE",spacer:"2",line:7,ct:152.3},
-  {technology:"CONVENTIONAL",group:"N03",battery_type:"N03",plate:15,separator:"PE",spacer:"2",line:7,ct:24.8},
-  {technology:"CONVENTIONAL",group:"N12D",battery_type:"N12D",plate:19,separator:"PE",spacer:"2",line:7,ct:33.4},
-];
-
-// ===== STATE =====
-let ctData=JSON.parse(localStorage.getItem('bmo2_ct')||'null')||genCT();
-let capData=JSON.parse(localStorage.getItem('bmo2_cap')||'null')||CAPRAW.map((r,i)=>({id:i+1,...r,...cc(r.ct)}));
-let orderData=JSON.parse(localStorage.getItem('bmo2_ord')||'null')||[];
-let capNid=Math.max(0,...capData.map(d=>d.id))+1;
-let ctNid=Math.max(0,...ctData.map(d=>d.id))+1;
-let capEid=null,ctEid=null,delId=null,delType=null;
-let cSortCol=null,cSortDir=1;
-let lvcChart=null;
-
-function saveAll(){localStorage.setItem('bmo2_ct',JSON.stringify(ctData));localStorage.setItem('bmo2_cap',JSON.stringify(capData));localStorage.setItem('bmo2_ord',JSON.stringify(orderData))}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
-
-// ===== NAV =====
-function setPage(id,el){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
-  document.getElementById('page-'+id).classList.add('active');
-  el.classList.add('active');
-  if(id==='ct')renderCT();
-  if(id==='cap')renderCap();
-  if(id==='lvc'){buildLVCLF();renderLVC();}
-  if(id==='mp')calcMP();
+function saveState() {
+  try {
+    localStorage.setItem('bpms_state', JSON.stringify(state));
+  } catch(e) { toast('Storage penuh!', 'error'); }
 }
 
-// ===== CYCLE TIME =====
-function renderCT(){
-  const q=(document.getElementById('ct-search').value||'').toLowerCase();
-  const lf=document.getElementById('ct-lf').value;
-  const lines=[...new Set(ctData.map(r=>r.line))].sort((a,b)=>a-b);
-  const sel=document.getElementById('ct-lf');const cv=sel.value;
-  sel.innerHTML='<option value="">Semua Line</option>'+lines.map(l=>`<option value="${l}"${String(l)===cv?' selected':''}>Line ${l}</option>`).join('');
-  const filt=ctData.filter(r=>(!q||r.process.toLowerCase().includes(q))&&(!lf||String(r.line)===lf));
-  const byLine={};filt.forEach(r=>{(byLine[r.line]=byLine[r.line]||[]).push(r)});
-  const totLines=Object.keys(byLine).length,totP=filt.length;
-  const avgCT=totP?+(filt.reduce((s,r)=>s+r.ct,0)/totP).toFixed(1):0;
-  const maxCT=totP?Math.max(...filt.map(r=>r.ct)):0;
-  document.getElementById('ct-stats').innerHTML=`
-    <div class="stat"><div class="stat-lbl">Total Line</div><div class="stat-val blue">${totLines}</div></div>
-    <div class="stat"><div class="stat-lbl">Total Proses</div><div class="stat-val">${totP}</div></div>
-    <div class="stat"><div class="stat-lbl">Avg CT (s)</div><div class="stat-val amber">${avgCT}</div></div>
-    <div class="stat"><div class="stat-lbl">Max CT (s)</div><div class="stat-val red">${maxCT.toFixed(1)}</div></div>`;
-  const grid=document.getElementById('ct-grid');
-  if(!Object.keys(byLine).length){grid.innerHTML='<div class="empty" style="grid-column:1/-1">Tidak ada data.</div>';return}
-  const mx=Math.max(...filt.map(r=>r.ct),1);
-  grid.innerHTML=Object.keys(byLine).sort((a,b)=>a-b).map(ln=>{
-    const ps=byLine[ln];
-    const avg=+(ps.reduce((s,r)=>s+r.ct,0)/ps.length).toFixed(1);
-    return`<div class="ct-card">
-      <div class="ct-head"><span class="ln">Line ${ln}</span><span class="lbadge">${ps.length} proses · avg ${avg}s</span></div>
-      <div class="ct-list">${ps.map((r,i)=>`<div class="ct-row">
-        <div class="ct-num">${i+1}</div>
-        <div class="ct-pname">${r.process}</div>
-        <div class="ct-bar-wrap"><div class="ct-bar-fill" style="width:${Math.round(r.ct/mx*100)}%"></div></div>
-        <div class="ct-val">${r.ct}s</div>
-        <button class="btn sm" onclick="openCTEdit(${r.id})" style="padding:3px 7px">✎</button>
-        <button class="btn sm danger" onclick="askDel(${r.id},'ct')" style="padding:3px 7px">✕</button>
-      </div>`).join('')}</div>
-    </div>`;
-  }).join('');
-}
-function openCTModal(){ctEid=null;document.getElementById('ct-mtitle').textContent='Tambah Proses';['ctm-line','ctm-name','ctm-ct'].forEach(id=>document.getElementById(id).value='');document.getElementById('ct-modal').classList.add('open')}
-function closeCTM(){document.getElementById('ct-modal').classList.remove('open')}
-function openCTEdit(id){ctEid=id;const r=ctData.find(d=>d.id===id);document.getElementById('ct-mtitle').textContent='Edit Proses';document.getElementById('ctm-line').value=r.line;document.getElementById('ctm-name').value=r.process;document.getElementById('ctm-ct').value=r.ct;document.getElementById('ct-modal').classList.add('open')}
-function saveCT(){
-  const ln=parseInt(document.getElementById('ctm-line').value),nm=document.getElementById('ctm-name').value.trim(),ct=parseFloat(document.getElementById('ctm-ct').value);
-  if(!ln||!nm||!ct){alert('Semua field wajib diisi.');return}
-  if(ctEid){Object.assign(ctData.find(d=>d.id===ctEid),{line:ln,process:nm,ct});toast('Proses diperbarui')}
-  else{ctData.push({id:ctNid++,line:ln,process:nm,ct});toast('Proses ditambahkan')}
-  saveAll();closeCTM();renderCT();
+function loadState() {
+  const raw = localStorage.getItem('bpms_state');
+  if (raw) { try { state = {...state, ...JSON.parse(raw)}; } catch(e) {} }
 }
 
-// ===== CAPACITY =====
-function renderCap(){
-  const q=(document.getElementById('cap-search').value||'').toLowerCase();
-  const ft=document.getElementById('cap-tech').value,fg=document.getElementById('cap-group').value,fl=document.getElementById('cap-line').value;
-  const groups=[...new Set(capData.map(r=>r.group))].sort();
-  const lines=[...new Set(capData.map(r=>r.line))].sort((a,b)=>a-b);
-  const gs=document.getElementById('cap-group');const cg=gs.value;
-  gs.innerHTML='<option value="">Semua Group</option>'+groups.map(g=>`<option${g===cg?' selected':''}>${g}</option>`).join('');
-  const ls=document.getElementById('cap-line');const cl=ls.value;
-  ls.innerHTML='<option value="">Semua Line</option>'+lines.map(l=>`<option value="${l}"${String(l)===cl?' selected':''}>Line ${l}</option>`).join('');
-  let rows=capData.filter(r=>{const s=(r.battery_type+r.group+r.technology).toLowerCase();return(!q||s.includes(q))&&(!ft||r.technology===ft)&&(!fg||r.group===fg)&&(!fl||String(r.line)===fl)});
-  if(cSortCol)rows=[...rows].sort((a,b)=>{const va=a[cSortCol],vb=b[cSortCol];return(isNaN(va)?String(va).localeCompare(String(vb)):(va-vb))*cSortDir});
-  const em=document.getElementById('cap-empty'),tb=document.getElementById('cap-body');
-  if(!rows.length){tb.innerHTML='';em.style.display='block';renderCapStats([]);return}
-  em.style.display='none';
-  const bm={CONVENTIONAL:'bc',AGM:'ba',EFB:'be','Li-Ion':'bl'};
-  tb.innerHTML=rows.map(r=>`<tr>
-    <td class="L"><span class="badge ${bm[r.technology]||'bc'}">${r.technology}</span></td>
-    <td style="font-weight:700">${r.group}</td><td>${r.battery_type}</td><td>${r.plate}</td>
-    <td>${r.separator||'-'}</td><td>${r.spacer||'-'}</td>
-    <td style="font-weight:700">${r.line}</td><td>${r.ct.toFixed(1)}</td>
-    <td class="cv bh">${r.batt_h}</td>
-    <td class="cv s1">${r.s1.toLocaleString()}</td>
-    <td class="cv s2">${r.s2.toLocaleString()}</td>
-    <td class="cv s3">${r.s3.toLocaleString()}</td>
-    <td class="cv tot" style="font-weight:700">${r.total.toLocaleString()}</td>
-    <td><div style="display:flex;gap:4px;justify-content:center">
-      <button class="btn sm" onclick="openCapEdit(${r.id})">✎</button>
-      <button class="btn sm danger" onclick="askDel(${r.id},'cap')">✕</button>
-    </div></td>
-  </tr>`).join('');
-  document.getElementById('cap-foot').textContent=`Menampilkan ${rows.length} dari ${capData.length} data`;
-  renderCapStats(rows);
-}
-function renderCapStats(rows){
-  const a=rows.length?+(rows.reduce((s,r)=>s+r.ct,0)/rows.length).toFixed(1):0;
-  const t1=rows.reduce((s,r)=>s+r.s1,0),t3=rows.reduce((s,r)=>s+r.s3,0),td=rows.reduce((s,r)=>s+r.total,0);
-  document.getElementById('cap-stats').innerHTML=`
-    <div class="stat"><div class="stat-lbl">Total Tipe</div><div class="stat-val blue">${rows.length}</div></div>
-    <div class="stat"><div class="stat-lbl">Avg CT (s)</div><div class="stat-val">${a}</div></div>
-    <div class="stat"><div class="stat-lbl">Total S1</div><div class="stat-val green">${t1.toLocaleString()}</div></div>
-    <div class="stat"><div class="stat-lbl">Total S3</div><div class="stat-val amber">${t3.toLocaleString()}</div></div>
-    <div class="stat"><div class="stat-lbl">Total 3 Shift</div><div class="stat-val red">${td.toLocaleString()}</div></div>`;
-}
-function csort(col,el){
-  cSortCol===col?cSortDir*=-1:(cSortCol=col,cSortDir=1);
-  document.querySelectorAll('.th-s').forEach(t=>{if(t.firstChild&&t.firstChild.nodeType===3)t.firstChild.textContent=t.firstChild.textContent.replace(/ [↑↓]/g,'')});
-  if(el.firstChild&&el.firstChild.nodeType===3)el.firstChild.textContent=el.firstChild.textContent.replace(/ [↑↓]/g,'')+(cSortDir===1?' ↑':' ↓');
-  renderCap();
-}
-function prevCap(){
-  const ct=parseFloat(document.getElementById('cm-ct').value),c=cc(ct);
-  if(!ct||ct<=0){['pv-bh','pv-s1','pv-s2','pv-s3','pv-tot'].forEach(id=>document.getElementById(id).textContent='—');return}
-  document.getElementById('pv-bh').textContent=c.batt_h+' batt/h';
-  document.getElementById('pv-s1').textContent=c.s1.toLocaleString()+' unit';
-  document.getElementById('pv-s2').textContent=c.s2.toLocaleString()+' unit';
-  document.getElementById('pv-s3').textContent=c.s3.toLocaleString()+' unit';
-  document.getElementById('pv-tot').textContent=c.total.toLocaleString()+' unit';
-}
-function openCapModal(){capEid=null;document.getElementById('cap-mtitle').textContent='Tambah Data';['cm-tech','cm-grp','cm-type','cm-plate','cm-sep','cm-spc','cm-line','cm-ct'].forEach(id=>{const e=document.getElementById(id);e.value=e.tagName==='SELECT'?'':''});prevCap();document.getElementById('cap-modal').classList.add('open')}
-function closeCapM(){document.getElementById('cap-modal').classList.remove('open')}
-function openCapEdit(id){
-  capEid=id;const r=capData.find(d=>d.id===id);
-  document.getElementById('cap-mtitle').textContent='Edit Data';
-  document.getElementById('cm-tech').value=r.technology;document.getElementById('cm-grp').value=r.group;document.getElementById('cm-type').value=r.battery_type;
-  document.getElementById('cm-plate').value=r.plate;document.getElementById('cm-sep').value=r.separator;document.getElementById('cm-spc').value=r.spacer;
-  document.getElementById('cm-line').value=r.line;document.getElementById('cm-ct').value=r.ct;prevCap();document.getElementById('cap-modal').classList.add('open');
-}
-function saveCap(){
-  const tech=document.getElementById('cm-tech').value,grp=document.getElementById('cm-grp').value.trim(),typ=document.getElementById('cm-type').value.trim(),ct=parseFloat(document.getElementById('cm-ct').value);
-  if(!tech||!grp||!typ){alert('Technology, Group, Battery Type wajib diisi.');return}
-  if(!ct||ct<=0){alert('CT wajib diisi dan > 0.');return}
-  const rec={technology:tech,group:grp,battery_type:typ,plate:parseInt(document.getElementById('cm-plate').value)||0,separator:document.getElementById('cm-sep').value.trim()||'-',spacer:document.getElementById('cm-spc').value.trim()||'-',line:parseInt(document.getElementById('cm-line').value)||0,ct,...cc(ct)};
-  if(capEid){Object.assign(capData.find(d=>d.id===capEid),rec);toast('Data diperbarui')}
-  else{rec.id=capNid++;capData.push(rec);toast('Data ditambahkan')}
-  saveAll();closeCapM();renderCap();
-}
-function exportCapCSV(){
-  const h='Technology,Group,Battery Type,Plate,Separator,Spacer,Line,CT(s),BATT/H,S1,S2,S3,Total';
-  const rows=capData.map(r=>[r.technology,r.group,r.battery_type,r.plate,r.separator,r.spacer,r.line,r.ct,r.batt_h,r.s1,r.s2,r.s3,r.total].join(','));
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent([h,...rows].join('\n'));a.download='PCS_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('nav-' + id).classList.add('active');
+
+  // refresh pada navigasi
+  if (id === 'order-list') renderOrderList();
+  if (id === 'lvc') refreshLVCPeriods();
+  if (id === 'capacity') refreshCapPeriods();
+  if (id === 'mp') refreshMPPage();
 }
 
-// ===== DELETE =====
-function askDel(id,type){delId=id;delType=type;document.getElementById('del-ov').classList.add('open')}
-function doDel(){
-  if(delType==='cap'){capData=capData.filter(d=>d.id!==delId);renderCap();toast('Data capacity dihapus')}
-  else if(delType==='ct'){ctData=ctData.filter(d=>d.id!==delId);renderCT();toast('Proses dihapus')}
-  saveAll();document.getElementById('del-ov').classList.remove('open');
-}
-
-// ===== LOADING VS CAPACITY =====
-function buildLVCLF(){
-  const lines=[...new Set(capData.map(r=>r.line))].sort((a,b)=>a-b);
-  const sel=document.getElementById('lvc-lf');const cv=sel.value;
-  sel.innerHTML='<option value="">Semua Line</option>'+lines.map(l=>`<option value="${l}"${String(l)===cv?' selected':''}>Line ${l}</option>`).join('');
-}
-function handleUpload(input){
-  const file=input.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      let rows=[];
-      if(file.name.toLowerCase().endsWith('.csv')){
-        const lines=e.target.result.split('\n').filter(l=>l.trim());
-        const hdr=lines[0].split(',').map(h=>h.trim().toLowerCase().replace(/"/g,''));
-        const bi=hdr.findIndex(h=>h.includes('battery')||h.includes('type'));
-        const li=hdr.findIndex(h=>h.includes('line'));
-        const qi=hdr.findIndex(h=>h.includes('qty')||h.includes('order')||h.includes('quantity'));
-        for(let i=1;i<lines.length;i++){
-          const c=lines[i].split(',').map(v=>v.trim().replace(/"/g,''));
-          if(c.length<3)continue;
-          rows.push({battery_type:c[bi>=0?bi:0],line:parseInt(c[li>=0?li:1])||1,qty:parseInt(c[qi>=0?qi:2])||0});
-        }
-      } else {
-        const wb=XLSX.read(e.target.result,{type:'array'});
-        const ws=wb.Sheets[wb.SheetNames[0]];
-        XLSX.utils.sheet_to_json(ws,{defval:''}).forEach(row=>{
-          const bk=Object.keys(row).find(k=>k.toLowerCase().includes('battery')||k.toLowerCase().includes('type'));
-          const lk=Object.keys(row).find(k=>k.toLowerCase().includes('line'));
-          const qk=Object.keys(row).find(k=>k.toLowerCase().includes('qty')||k.toLowerCase().includes('order')||k.toLowerCase().includes('quantity'));
-          if(bk&&lk&&qk)rows.push({battery_type:String(row[bk]),line:parseInt(row[lk])||1,qty:parseInt(row[qk])||0});
-        });
-      }
-      if(!rows.length){alert('Data tidak ditemukan. Pastikan kolom: Battery Type, Line, Qty Order');return}
-      orderData=rows;saveAll();setUploadUI(file.name,rows.length);renderLVC();calcMP();toast(`${rows.length} baris order berhasil diimport`);
-    }catch(err){alert('Gagal membaca file: '+err.message)}
+// ============================================================
+// TOAST
+// ============================================================
+function toast(msg, type='info') {
+  const icons = {
+    success: '✓', error: '✗', info: 'ℹ', warning: '⚠'
   };
-  file.name.toLowerCase().endsWith('.csv')?reader.readAsText(file):reader.readAsArrayBuffer(file);
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span style="font-size:14px">${icons[type]||'ℹ'}</span><span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
 }
-function setUploadUI(name,count){
-  document.getElementById('uzone').classList.add('has-file');
-  document.getElementById('uico').textContent='✅';
-  document.getElementById('utxt').innerHTML=`<strong>${name}</strong><br><small style="color:var(--green)">${count} baris order dimuat</small>`;
-  document.getElementById('clear-btn').style.display='';
-  document.getElementById('order-card').style.display='';
-}
-function clearOrders(){
-  orderData=[];saveAll();
-  document.getElementById('uzone').classList.remove('has-file');
-  document.getElementById('uico').textContent='📂';
-  document.getElementById('utxt').innerHTML='<strong>Klik untuk upload</strong> Excel atau CSV<br><small style="color:#aaa">Kolom: Battery Type · Line · Qty Order</small>';
-  document.getElementById('clear-btn').style.display='none';
-  document.getElementById('order-card').style.display='none';
-  document.getElementById('ofile').value='';
-  renderLVC();calcMP();
-}
-function useSample(){
-  orderData=capData.slice(0,20).map(r=>({battery_type:r.battery_type,line:r.line,qty:Math.floor(400+Math.random()*1100)}));
-  saveAll();setUploadUI('data-contoh.csv',orderData.length);renderLVC();calcMP();toast('Data contoh dimuat');
-}
-function dlTemplate(){
-  const csv='Battery Type,Line,Qty Order\nNS40,1,800\nN50,5,1200\nN70,6,600\nN100,2,400';
-  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);a.download='template_order.csv';a.click();
-}
-function renderLVC(){
-  const sc=parseInt(document.getElementById('shift-sel').value)||3;
-  const lf=document.getElementById('lvc-lf').value;
-  const allLines=[...new Set(capData.map(r=>r.line))].sort((a,b)=>a-b);
-  const lines=lf?allLines.filter(l=>String(l)===lf):allLines;
 
-  // Cap & load per line
-  const capMap={},loadMap={};
-  lines.forEach(ln=>{
-    const items=capData.filter(r=>r.line===ln);
-    const c1=items.reduce((s,r)=>s+r.s1,0),c2=items.reduce((s,r)=>s+r.s2,0),c3=items.reduce((s,r)=>s+r.s3,0);
-    const tot=sc===1?c1:sc===2?c1+c2:c1+c2+c3;
-    capMap[ln]={c1,c2,c3,tot};
-    loadMap[ln]=0;
-  });
-  orderData.filter(o=>!lf||String(o.line)===lf).forEach(o=>{if(loadMap[o.line]!==undefined)loadMap[o.line]+=o.qty});
+// ============================================================
+// DB LINE UPLOAD
+// ============================================================
+function uploadDbLine(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const wb = XLSX.read(e.target.result, {type:'binary'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    state.dbLine = [];
+    rows.forEach(r => {
+      const line = String(r[0]||'').trim();
+      const prefix = String(r[1]||'').trim();
+      if (line && prefix) state.dbLine.push({line, prefix});
+    });
+    saveState();
+    renderDbLine();
+    toast(`${state.dbLine.length} mapping LINE berhasil diupload`, 'success');
+    input.value = '';
+  };
+  reader.readAsBinaryString(file);
+}
 
-  const totCap=lines.reduce((s,l)=>s+(capMap[l]?.tot||0),0);
-  const totLoad=lines.reduce((s,l)=>s+(loadMap[l]||0),0);
-  const util=totCap?Math.round(totLoad/totCap*100):0;
-  const uColor=util>100?'red':util>80?'amber':'green';
-  document.getElementById('lvc-sum').innerHTML=`
-    <div class="stat"><div class="stat-lbl">Total Kapasitas</div><div class="stat-val blue">${totCap.toLocaleString()}</div></div>
-    <div class="stat"><div class="stat-lbl">Total Loading</div><div class="stat-val amber">${totLoad.toLocaleString()}</div></div>
-    <div class="stat"><div class="stat-lbl">Utilisasi</div><div class="stat-val ${uColor}">${util}%</div></div>
-    <div class="stat"><div class="stat-lbl">Status</div><div class="stat-val" style="font-size:16px">${util>100?'🔴 Overload':util>80?'🟡 Normal':'🟢 Underload'}</div></div>`;
+function renderDbLine() {
+  const data = state.dbLine;
+  const count = document.getElementById('db-line-count');
+  count.textContent = `${data.length} records`;
 
-  // Order table
-  if(orderData.length){
-    const ob=document.getElementById('order-body');
-    const getCapShift=(bt,ln)=>{const c=capData.find(r=>r.battery_type===bt&&r.line===ln);if(!c)return 0;return sc===1?c.s1:sc===2?c.s1+c.s2:c.s1+c.s2+c.s3};
-    ob.innerHTML=orderData.filter(o=>!lf||String(o.line)===lf).map((o,i)=>{
-      const cap=getCapShift(o.battery_type,o.line);
-      const pct=cap?Math.round(o.qty/cap*100):0;
-      const st=pct>100?'<span style="background:#FFEBEE;color:#c62828;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">OVERLOAD</span>':pct>80?'<span style="background:#FFF3E0;color:#e65100;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">NORMAL</span>':'<span style="background:#E8F5E9;color:#2e7d32;padding:2px 7px;border-radius:8px;font-size:10px;font-weight:700">UNDERLOAD</span>';
-      return`<tr><td>${i+1}</td><td class="L">${o.battery_type}</td><td>Line ${o.line}</td><td style="font-weight:700">${o.qty.toLocaleString()}</td><td>${cap.toLocaleString()}</td><td style="font-weight:700">${pct}%</td><td>${st}</td></tr>`;
-    }).join('');
+  const empty = document.getElementById('db-line-empty');
+  const wrap = document.getElementById('db-line-table-wrap');
+
+  if (!data.length) { empty.style.display=''; wrap.style.display='none'; return; }
+  empty.style.display='none'; wrap.style.display='';
+
+  // summary badges
+  const lines = [...new Set(data.map(d=>d.line))];
+  const summary = document.getElementById('db-line-summary');
+  summary.innerHTML = lines.map(l => {
+    const cnt = data.filter(d=>d.line===l).length;
+    return `<span class="badge badge-blue">${l}: ${cnt} item</span>`;
+  }).join('');
+
+  const tbody = document.getElementById('db-line-tbody');
+  tbody.innerHTML = data.map((d,i) => `
+    <tr>
+      <td class="td-mono">${i+1}</td>
+      <td><span class="badge badge-blue">${d.line}</span></td>
+      <td class="td-mono">${d.prefix}</td>
+      <td><button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteDbLineRow(${i})">Hapus</button></td>
+    </tr>
+  `).join('');
+}
+
+function deleteDbLineRow(i) {
+  state.dbLine.splice(i,1);
+  saveState();
+  renderDbLine();
+  toast('Baris dihapus','info');
+}
+
+function exportDbLine() {
+  if (!state.dbLine.length) { toast('Tidak ada data','warning'); return; }
+  const ws = XLSX.utils.json_to_sheet(state.dbLine.map(d=>({'LINE':d.line,'ITEM Prefix':d.prefix})));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'DB_LINE');
+  XLSX.writeFile(wb, 'db_line_export.xlsx');
+}
+
+// ============================================================
+// DB PCS UPLOAD
+// ============================================================
+function uploadDbPCS(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const wb = XLSX.read(e.target.result, {type:'binary'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    state.dbPCS = [];
+    // skip header row if first col is text
+    const startIdx = (isNaN(rows[0]?.[7]) && rows[0]?.[7] !== '') ? 1 : 0;
+    for (let i = startIdx; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r[0] && !r[6]) continue;
+      state.dbPCS.push({
+        technology: String(r[0]||'').trim(),
+        group: String(r[1]||'').trim(),
+        type: String(r[2]||'').trim(),
+        plate: String(r[3]||'').trim(),
+        separator: String(r[4]||'').trim(),
+        spacer: String(r[5]||'').trim(),
+        line: String(r[6]||'').trim(),
+        ct: parseFloat(r[7]) || 0,
+        batPerHour: parseFloat(r[8]) || 0,
+        kapS1: parseFloat(r[9]) || 0,
+        kapS2: parseFloat(r[10]) || 0,
+        kapS3: parseFloat(r[11]) || 0,
+        totalKap: parseFloat(r[12]) || 0,
+      });
+    }
+    saveState();
+    renderDbPCS();
+    toast(`${state.dbPCS.length} record PCS berhasil diupload`, 'success');
+    input.value = '';
+  };
+  reader.readAsBinaryString(file);
+}
+
+function renderDbPCS() {
+  const data = state.dbPCS;
+  document.getElementById('db-pcs-count').textContent = `${data.length} records`;
+  const empty = document.getElementById('db-pcs-empty');
+  const wrap = document.getElementById('db-pcs-table-wrap');
+  if (!data.length) { empty.style.display=''; wrap.style.display='none'; return; }
+  empty.style.display='none'; wrap.style.display='';
+
+  const tbody = document.getElementById('db-pcs-tbody');
+  tbody.innerHTML = data.map((d,i) => `
+    <tr>
+      <td class="td-mono">${i+1}</td>
+      <td><span class="badge badge-blue">${d.technology}</span></td>
+      <td>${d.group}</td>
+      <td class="td-mono">${d.type}</td>
+      <td class="td-mono">${d.plate}</td>
+      <td>${d.separator}</td>
+      <td>${d.spacer}</td>
+      <td><span class="badge badge-green">${d.line}</span></td>
+      <td class="td-mono">${d.ct}</td>
+      <td class="td-mono">${d.batPerHour}</td>
+      <td class="td-mono">${d.kapS1}</td>
+      <td class="td-mono">${d.kapS2}</td>
+      <td class="td-mono">${d.kapS3}</td>
+      <td class="td-mono td-bold">${d.totalKap}</td>
+    </tr>
+  `).join('');
+}
+
+// ============================================================
+// ORDER UPLOAD
+// ============================================================
+function handleDrop(event, type) {
+  event.preventDefault();
+  event.currentTarget.classList.remove('dragover');
+  const file = event.dataTransfer.files[0];
+  if (file && type === 'order') {
+    processOrderFile(file);
+  }
+}
+
+function uploadOrder(input) {
+  const file = input.files[0];
+  if (!file) return;
+  processOrderFile(file);
+  input.value = '';
+}
+
+function processOrderFile(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const wb = XLSX.read(e.target.result, {type:'binary'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+    const data = [];
+    for (let i = 0; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r[2]) continue; // ITEM must exist
+      data.push({
+        customer: String(r[0]||'').trim(),
+        no_sdf: String(r[1]||'').trim(),
+        item: String(r[2]||'').trim(),
+        brand: String(r[3]||'').trim(),
+        variance: String(r[4]||'').trim(),
+        qty_order: parseFloat(r[5]) || 0,
+        qty_delivery: parseFloat(r[6]) || 0,
+        deviasi: parseFloat(r[7]) || 0,
+        stock_fg: parseFloat(r[8]) || 0,
+        dev_stock: parseFloat(r[9]) || 0,
+        stock_prod2: parseFloat(r[10]) || 0,
+        stock_wet: parseFloat(r[11]) || 0,
+      });
+    }
+    state.pendingUpload = data;
+    showPreview(data);
+  };
+  reader.readAsBinaryString(file);
+}
+
+function showPreview(data) {
+  const previewDiv = document.getElementById('upload-preview');
+  previewDiv.style.display = '';
+  const info = document.getElementById('preview-info');
+  info.innerHTML = `
+    <span class="badge badge-blue">${data.length} baris data</span>
+    <span class="badge badge-green">Siap diupload</span>
+  `;
+  const tbody = document.getElementById('preview-tbody');
+  tbody.innerHTML = data.slice(0,50).map((d,i)=>`
+    <tr>
+      <td class="td-mono">${i+1}</td>
+      <td>${d.customer}</td>
+      <td class="td-mono">${d.no_sdf}</td>
+      <td class="td-mono" style="max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${d.item}">${d.item}</td>
+      <td>${d.brand}</td>
+      <td>${d.variance}</td>
+      <td class="td-mono td-bold">${d.qty_order.toLocaleString()}</td>
+      <td class="td-mono">${d.qty_delivery.toLocaleString()}</td>
+      <td class="td-mono">${d.deviasi.toLocaleString()}</td>
+      <td class="td-mono">${d.stock_fg.toLocaleString()}</td>
+      <td class="td-mono">${d.dev_stock.toLocaleString()}</td>
+      <td class="td-mono">${d.stock_prod2.toLocaleString()}</td>
+      <td class="td-mono">${d.stock_wet.toLocaleString()}</td>
+    </tr>
+  `).join('');
+  if (data.length > 50) {
+    tbody.innerHTML += `<tr><td colspan="13" style="text-align:center;color:var(--text3);font-style:italic">... dan ${data.length-50} baris lainnya</td></tr>`;
+  }
+}
+
+function cancelUpload() {
+  state.pendingUpload = null;
+  document.getElementById('upload-preview').style.display = 'none';
+}
+
+function confirmUpload() {
+  if (!state.pendingUpload) return;
+  const month = document.getElementById('order-month').value;
+  const year = document.getElementById('order-year').value;
+  const key = `${year}-${String(month).padStart(2,'0')}`;
+  const monthName = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'][parseInt(month)-1];
+
+  state.orders[key] = state.pendingUpload;
+  state.pendingUpload = null;
+  document.getElementById('upload-preview').style.display = 'none';
+
+  saveState();
+  updateBadge();
+  refreshAllPeriodDropdowns();
+  toast(`Data ${monthName} ${year} (${state.orders[key].length} item) tersimpan!`, 'success');
+}
+
+function updateBadge() {
+  const total = Object.keys(state.orders).length;
+  document.getElementById('badge-orders').textContent = total;
+}
+
+// ============================================================
+// ORDER LIST
+// ============================================================
+function renderOrderList() {
+  const keys = Object.keys(state.orders).sort().reverse();
+  const filterEl = document.getElementById('filter-order-period');
+
+  // rebuild dropdown
+  const cur = filterEl.value;
+  filterEl.innerHTML = '<option value="">-- Semua Periode --</option>' +
+    keys.map(k => `<option value="${k}" ${k===cur?'selected':''}>${periodLabel(k)}</option>`).join('');
+
+  const empty = document.getElementById('order-list-empty');
+  const content = document.getElementById('order-list-content');
+
+  if (!keys.length) { empty.style.display=''; content.style.display='none'; return; }
+  empty.style.display='none'; content.style.display='';
+
+  const selectedPeriod = filterEl.value;
+  let allOrders = [];
+  if (selectedPeriod) {
+    allOrders = (state.orders[selectedPeriod]||[]).map(o=>({...o, period:selectedPeriod}));
+  } else {
+    keys.forEach(k => {
+      (state.orders[k]||[]).forEach(o => allOrders.push({...o, period:k}));
+    });
   }
 
-  // Chart
-  if(lvcChart)lvcChart.destroy();
-  const ctx=document.getElementById('lvc-chart').getContext('2d');
-  const labels=lines.map(l=>`Line ${l}`);
-  lvcChart=new Chart(ctx,{
-    data:{
-      labels,
-      datasets:[
-        {type:'bar',label:'Kapasitas S1',data:lines.map(l=>capMap[l]?.c1||0),backgroundColor:'rgba(25,118,210,0.72)',stack:'cap',order:2},
-        {type:'bar',label:'Kapasitas S2',data:lines.map(l=>sc>=2?capMap[l]?.c2||0:0),backgroundColor:'rgba(46,125,50,0.72)',stack:'cap',order:2},
-        {type:'bar',label:'Kapasitas S3',data:lines.map(l=>sc>=3?capMap[l]?.c3||0:0),backgroundColor:'rgba(230,81,0,0.72)',stack:'cap',order:2},
-        {type:'line',label:'Loading (Order)',data:lines.map(l=>loadMap[l]||0),borderColor:'#c62828',borderWidth:2.5,pointRadius:6,pointBackgroundColor:'#c62828',backgroundColor:'rgba(198,40,40,0.08)',tension:0.3,fill:false,order:1},
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{family:'Barlow, sans-serif',size:12},usePointStyle:true}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y.toLocaleString()}`}}},
-      scales:{
-        x:{stacked:true,grid:{display:false},ticks:{font:{family:'Barlow, sans-serif',size:12}}},
-        y:{stacked:false,grid:{color:'rgba(0,0,0,0.06)'},ticks:{font:{family:'Barlow, sans-serif',size:11},callback:v=>v.toLocaleString()}}
-      }
-    }
-  });
+  // enrich with LINE and specs
+  const enriched = allOrders.map(o => ({
+    ...o,
+    lineAssigned: getLineForItem(o.item),
+    specs: parseItemSpecs(o.item),
+  }));
 
-  // Utilization
-  const ug=document.getElementById('util-grid');
-  ug.innerHTML=lines.map(ln=>{
-    const cap=capMap[ln]?.tot||0,load=loadMap[ln]||0;
-    const pct=cap?Math.round(load/cap*100):0;
-    const clr=pct>100?'#c62828':pct>80?'#e65100':'#2e7d32';
-    const cls=pct>100?'ub-over':pct>80?'ub-ok':'ub-under';
-    const lbl=pct>100?'OVERLOAD':pct>80?'NORMAL':'UNDERLOAD';
-    return`<div class="util-card">
-      <div class="util-ln">Line ${ln}</div>
-      <div class="util-bar-bg"><div class="util-bar" style="width:${Math.min(pct,100)}%;background:${clr}"></div></div>
-      <div class="util-pct" style="color:${clr}">${pct}%</div>
-      <div style="font-size:11px;color:var(--gray);margin:3px 0">Load ${load.toLocaleString()} / Cap ${cap.toLocaleString()}</div>
-      <span class="util-badge ${cls}">${lbl}</span>
-    </div>`;
-  }).join('');
+  // stats
+  const statsEl = document.getElementById('order-stats');
+  const totalQty = enriched.reduce((s,o)=>s+o.qty_order,0);
+  const lines = [...new Set(enriched.map(o=>o.lineAssigned).filter(Boolean))];
+  const unmapped = enriched.filter(o=>!o.lineAssigned).length;
+
+  statsEl.innerHTML = `
+    <div class="stat-card"><div class="stat-label">Total Item</div><div class="stat-value">${enriched.length.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">Total QTY Order</div><div class="stat-value">${totalQty.toLocaleString()}</div></div>
+    <div class="stat-card"><div class="stat-label">LINE Aktif</div><div class="stat-value">${lines.length}</div></div>
+    <div class="stat-card"><div class="stat-label">Unmapped</div><div class="stat-value" style="color:${unmapped?'var(--red)':'var(--green)'}">${unmapped}</div></div>
+  `;
+
+  // store for search
+  window._currentOrderData = enriched;
+  filterOrderTable();
 }
 
-// ===== MAN POWER =====
-function calcMP(){
-  const eff=parseFloat(document.getElementById('mp-eff').value)/100||0.85;
-  const wm=parseFloat(document.getElementById('mp-wt').value)||435;
-  const sh=parseInt(document.getElementById('mp-sh').value)||3;
-  if(!orderData.length){
-    document.getElementById('mp-empty').style.display='block';
-    document.getElementById('mp-grid').style.display='none';
-    document.getElementById('mp-big').textContent='0';
-    document.getElementById('mp-info').textContent='Upload data order terlebih dahulu';
+function filterOrderTable() {
+  const q = (document.getElementById('search-order')?.value||'').toLowerCase();
+  const data = window._currentOrderData || [];
+  const filtered = q ? data.filter(o => o.item.toLowerCase().includes(q) || o.customer.toLowerCase().includes(q)) : data;
+
+  const tbody = document.getElementById('order-detail-tbody');
+  tbody.innerHTML = filtered.slice(0,200).map((o,i)=>`
+    <tr>
+      <td class="td-mono">${i+1}</td>
+      <td class="td-mono" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.item}">${o.item}</td>
+      <td>${o.customer}</td>
+      <td>${o.lineAssigned ? `<span class="badge badge-blue">${o.lineAssigned}</span>` : '<span class="badge badge-red">Unmapped</span>'}</td>
+      <td class="td-mono td-bold">${o.qty_order.toLocaleString()}</td>
+      <td class="td-mono">${o.qty_delivery.toLocaleString()}</td>
+      <td class="td-mono" style="color:${o.deviasi<0?'var(--red)':'var(--green)'}">${o.deviasi.toLocaleString()}</td>
+      <td class="td-mono">${o.stock_fg.toLocaleString()}</td>
+      <td>${o.specs.technology ? `<span class="badge badge-blue">${o.specs.technology}</span>` : '-'}</td>
+      <td class="td-mono">${o.specs.plate || '-'}</td>
+      <td>${o.specs.separator || '-'}</td>
+    </tr>
+  `).join('');
+
+  if (filtered.length > 200) {
+    tbody.innerHTML += `<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Menampilkan 200 dari ${filtered.length} item. Gunakan filter untuk mempersempit.</td></tr>`;
+  }
+}
+
+function deleteCurrentPeriod() {
+  const sel = document.getElementById('filter-order-period').value;
+  if (!sel) { toast('Pilih periode terlebih dahulu','warning'); return; }
+  if (!confirm(`Hapus data periode ${periodLabel(sel)}?`)) return;
+  delete state.orders[sel];
+  saveState();
+  updateBadge();
+  refreshAllPeriodDropdowns();
+  renderOrderList();
+  toast(`Periode ${periodLabel(sel)} dihapus`, 'info');
+}
+
+// ============================================================
+// ITEM PARSING
+// ============================================================
+function getLineForItem(item) {
+  if (!item) return null;
+  const parts = item.split('-');
+  // build prefix dari bagian awal item (ambil 4 segmen awal)
+  for (const entry of state.dbLine) {
+    // match if item starts with the prefix
+    if (item.toUpperCase().startsWith(entry.prefix.toUpperCase())) {
+      return entry.line;
+    }
+    // also try: item contains the prefix in the 3rd segment
+    if (parts[2] && parts[2].toUpperCase().startsWith(entry.prefix.split('-').slice(-1)[0].toUpperCase())) {
+      // check broader match
+    }
+    // exact check: join first N parts of item
+    const prefParts = entry.prefix.split('-');
+    const itemParts = item.split('-');
+    if (prefParts.every((p, idx) => (itemParts[idx]||'').toUpperCase() === p.toUpperCase())) {
+      return entry.line;
+    }
+  }
+  return null;
+}
+
+function parseItemSpecs(item) {
+  // item format: F-ACDP-48D26RX-A9C3-IN-XPE0
+  // char index (0-based): pos 4 = technology indicator (char ke-5 satu-kesatu)
+  if (!item) return {};
+  try {
+    const flat = item.replace(/-/g,''); // FACDP48D26RXA9C3INXPE0
+    // separator: char ke-5 dari item (index 4)
+    const sep5 = item[4] || '';
+    const separator = sep5 === 'D' ? 'Darak' : sep5 === 'P' ? 'PE' : sep5;
+
+    // technology: char ke-4 (index 3)
+    const tech4 = item[3] || '';
+    const technology = tech4 === 'C' ? 'Conventional' :
+                       tech4 === 'H' ? 'Hybrid' :
+                       (tech4 === 'M' || tech4 === 'V') ? 'Maintenance Free' : tech4;
+
+    // part3 = kata ke-3 (index 2): "48D26RX"
+    const parts = item.split('-');
+    const part3 = parts[2] || '';
+    // group
+    let group = '';
+    if (part3.includes('D26')) group = 'N50';
+    else if (part3.includes('D31')) group = 'N70';
+    else if (part3.includes('D23')) group = 'NS40';
+    else if (part3.includes('D20')) group = 'N40';
+    else group = part3;
+
+    // type = part3 minus trailing X
+    const type = part3.endsWith('X') ? part3.slice(0,-1) : part3;
+
+    // plate: char 16-17 dari item (0-based = 15,16)
+    const ch16 = item[15] || '';
+    const ch17 = item[16] || '';
+    const letterToDigit = (c) => {
+      if (!isNaN(c)) return c;
+      return String(c.toUpperCase().charCodeAt(0) - 65);
+    };
+    const plate = `${letterToDigit(ch16)}${ch17}`;
+
+    return { technology, group, type, separator, plate };
+  } catch(e) {
+    return {};
+  }
+}
+
+function getPCSForItem(item) {
+  if (!state.dbPCS.length) return null;
+  const specs = parseItemSpecs(item);
+  // find matching PCS record
+  return state.dbPCS.find(p =>
+    (!p.technology || p.technology === specs.technology) &&
+    (!p.group || p.group === specs.group) &&
+    (!p.type || p.type === specs.type) &&
+    (!p.plate || String(p.plate) === String(specs.plate)) &&
+    (!p.separator || p.separator === specs.separator)
+  ) || null;
+}
+
+// ============================================================
+// CAPACITY SETTING
+// ============================================================
+function refreshCapPeriods() {
+  const sel = document.getElementById('cap-period-select');
+  const cur = sel.value;
+  const keys = Object.keys(state.orders).sort().reverse();
+  sel.innerHTML = '<option value="">-- Pilih Periode --</option>' +
+    keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${periodLabel(k)}</option>`).join('');
+  loadCapacityForPeriod();
+}
+
+function loadCapacityForPeriod() {
+  const period = document.getElementById('cap-period-select').value;
+  const noPeriod = document.getElementById('cap-no-period');
+  const content = document.getElementById('cap-content');
+
+  if (!period) { noPeriod.style.display=''; content.style.display='none'; return; }
+  noPeriod.style.display='none'; content.style.display='';
+
+  // get all lines from DB LINE
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  const capData = state.capacity[period] || {};
+
+  const tbody = document.getElementById('cap-tbody');
+  if (!lines.length) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3)">Database LINE belum diisi</td></tr>`;
     return;
   }
-  document.getElementById('mp-empty').style.display='none';
-  document.getElementById('mp-grid').style.display='grid';
 
-  const byLine={};
-  orderData.forEach(o=>{(byLine[o.line]=byLine[o.line]||[]).push(o)});
+  tbody.innerHTML = lines.map(line => {
+    const c = capData[line] || {workDays:22, s1:1, s2:1, s3:0};
+    return `
+      <tr>
+        <td><span class="badge badge-blue">${line}</span></td>
+        <td><input class="shift-input" type="number" min="0" max="31" value="${c.workDays}" id="wd-${line.replace(/\s/g,'_')}" oninput="updateCapPreview('${line}')"></td>
+        <td>
+          <label class="toggle"><input type="checkbox" ${c.s1?'checked':''} id="s1-${line.replace(/\s/g,'_')}" onchange="updateCapPreview('${line}')"><span class="toggle-slider"></span></label>
+        </td>
+        <td>
+          <label class="toggle"><input type="checkbox" ${c.s2?'checked':''} id="s2-${line.replace(/\s/g,'_')}" onchange="updateCapPreview('${line}')"><span class="toggle-slider"></span></label>
+        </td>
+        <td>
+          <label class="toggle"><input type="checkbox" ${c.s3?'checked':''} id="s3-${line.replace(/\s/g,'_')}" onchange="updateCapPreview('${line}')"><span class="toggle-slider"></span></label>
+        </td>
+        <td class="td-mono td-bold" id="cap-preview-${line.replace(/\s/g,'_')}">-</td>
+      </tr>
+    `;
+  }).join('');
 
-  let grand=0;
-  const cards=Object.keys(byLine).sort((a,b)=>a-b).map(ln=>{
-    const orders=byLine[ln];
-    const totalQty=orders.reduce((s,o)=>s+o.qty,0);
-    const lineProcs=ctData.filter(r=>r.line===parseInt(ln));
-    const avail=wm*60*eff*sh;
-    const pmp=lineProcs.map(p=>({name:p.process,mp:Math.max(1,Math.ceil(totalQty*p.ct/avail))}));
-    const tot=pmp.reduce((s,p)=>s+p.mp,0);
-    grand+=tot;
-    return`<div class="mp-card">
-      <div class="mp-head">
-        <div class="mp-ln">Line ${ln}</div>
-        <div class="mp-tot">${tot} <span style="font-size:12px;opacity:0.7">orang</span></div>
-        <div style="font-size:11px;opacity:0.6;margin-top:2px">Target: ${totalQty.toLocaleString()} unit · ${sh} shift</div>
-      </div>
-      <div class="mp-body">
-        ${pmp.slice(0,10).map(p=>`<div class="mp-row"><span style="color:var(--gray)">${p.name}</span><span style="font-weight:700;color:var(--navy)">${p.mp} org</span></div>`).join('')}
-        ${pmp.length>10?`<div style="text-align:center;font-size:11px;color:var(--gray);padding:5px">+${pmp.length-10} proses lainnya</div>`:''}
-      </div>
-    </div>`;
-  });
-  document.getElementById('mp-grid').innerHTML=cards.join('');
-  document.getElementById('mp-big').textContent=grand.toLocaleString();
-  document.getElementById('mp-info').textContent=`${Object.keys(byLine).length} line aktif · ${orderData.length} tipe battery`;
+  lines.forEach(l => updateCapPreview(l));
 }
 
-// ===== INIT =====
-if(orderData.length){setUploadUI('data-tersimpan',orderData.length)}
-renderCT();
+function updateCapPreview(line) {
+  const key = line.replace(/\s/g,'_');
+  const wd = parseInt(document.getElementById(`wd-${key}`)?.value)||0;
+  const s1 = document.getElementById(`s1-${key}`)?.checked ? 1 : 0;
+  const s2 = document.getElementById(`s2-${key}`)?.checked ? 1 : 0;
+  const s3 = document.getElementById(`s3-${key}`)?.checked ? 1 : 0;
+  // total minutes per day based on active shifts
+  const minsPerDay = (s1?435:0) + (s2?405:0) + (s3?370:0);
+  const totalMins = minsPerDay * wd;
+  const el = document.getElementById(`cap-preview-${key}`);
+  if (el) el.textContent = totalMins ? `${(totalMins/60).toFixed(1)} jam` : '0';
+}
+
+function saveCapacity() {
+  const period = document.getElementById('cap-period-select').value;
+  if (!period) { toast('Pilih periode terlebih dahulu','warning'); return; }
+
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  state.capacity[period] = {};
+  lines.forEach(line => {
+    const key = line.replace(/\s/g,'_');
+    state.capacity[period][line] = {
+      workDays: parseInt(document.getElementById(`wd-${key}`)?.value)||0,
+      s1: document.getElementById(`s1-${key}`)?.checked ? 1 : 0,
+      s2: document.getElementById(`s2-${key}`)?.checked ? 1 : 0,
+      s3: document.getElementById(`s3-${key}`)?.checked ? 1 : 0,
+    };
+  });
+  saveState();
+  toast(`Kapasitas periode ${periodLabel(period)} tersimpan`, 'success');
+}
+
+// ============================================================
+// LVC CALCULATION
+// ============================================================
+function refreshLVCPeriods() {
+  const sel = document.getElementById('lvc-period-select');
+  const cur = sel.value;
+  const keys = Object.keys(state.orders).sort().reverse();
+  sel.innerHTML = '<option value="">-- Pilih Periode --</option>' +
+    keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${periodLabel(k)}</option>`).join('');
+  if (!cur && keys.length) {
+    sel.value = keys[0];
+  }
+  calculateLVC();
+}
+
+function calculateLVC() {
+  const period = document.getElementById('lvc-period-select').value;
+  const noData = document.getElementById('lvc-no-data');
+  const content = document.getElementById('lvc-content');
+
+  if (!period || !state.orders[period]) {
+    noData.style.display=''; content.style.display='none'; return;
+  }
+
+  const orders = state.orders[period];
+  const capConfig = state.capacity[period] || {};
+
+  // group orders by LINE
+  const lineGroups = {};
+  const unmapped = [];
+
+  orders.forEach(o => {
+    const line = getLineForItem(o.item);
+    if (!line) { unmapped.push({item:o.item, qty:o.qty_order, reason:'LINE tidak ditemukan'}); return; }
+    if (!lineGroups[line]) lineGroups[line] = [];
+    lineGroups[line].push(o);
+  });
+
+  // calculate processing time per line
+  const lvcData = [];
+  const allLines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+
+  allLines.forEach(line => {
+    const lineOrders = lineGroups[line] || [];
+    const cap = capConfig[line] || {workDays:22, s1:1, s2:1, s3:0};
+    const minsPerDay = (cap.s1?435:0) + (cap.s2?405:0) + (cap.s3?370:0);
+    const capacityMins = minsPerDay * cap.workDays;
+    const capacityHours = capacityMins / 60;
+
+    let totalProcessingTimeSec = 0;
+    let noPCS = [];
+
+    lineOrders.forEach(o => {
+      const pcs = getPCSForItem(o.item);
+      if (!pcs) {
+        noPCS.push(o.item);
+        // if PCS not found, try to find CT from any PCS with same line
+        const anyPCS = state.dbPCS.find(p => p.line === line);
+        if (anyPCS && anyPCS.ct) {
+          totalProcessingTimeSec += o.qty_order * anyPCS.ct;
+        }
+        return;
+      }
+      totalProcessingTimeSec += o.qty_order * pcs.ct;
+    });
+
+    noPCS.forEach(item => unmapped.push({item, qty:0, reason:'PCS tidak ditemukan'}));
+
+    const processingHours = totalProcessingTimeSec / 3600;
+    const loadingPct = capacityHours > 0 ? (processingHours / capacityHours * 100) : 0;
+    const totalQty = lineOrders.reduce((s,o)=>s+o.qty_order,0);
+
+    lvcData.push({
+      line, totalQty, processingHours, capacityHours, loadingPct,
+      cap, shiftActive: [cap.s1?'S1':'', cap.s2?'S2':'', cap.s3?'S3':''].filter(Boolean).join(' + ') || '-'
+    });
+  });
+
+  noData.style.display='none'; content.style.display='';
+
+  // summary stats
+  const overloaded = lvcData.filter(d=>d.loadingPct>100).length;
+  const avgLoading = lvcData.length ? lvcData.reduce((s,d)=>s+d.loadingPct,0)/lvcData.length : 0;
+  const totalQtyAll = lvcData.reduce((s,d)=>s+d.totalQty,0);
+
+  document.getElementById('lvc-summary-stats').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Order</div>
+      <div class="stat-value">${totalQtyAll.toLocaleString()}</div>
+      <div class="stat-sub">unit produksi</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">LINE Aktif</div>
+      <div class="stat-value">${lvcData.filter(d=>d.totalQty>0).length}</div>
+      <div class="stat-sub">dari ${lvcData.length} LINE</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Loading</div>
+      <div class="stat-value" style="color:${avgLoading>100?'var(--red)':avgLoading>80?'var(--yellow)':'var(--green)'}">${avgLoading.toFixed(1)}%</div>
+      <div class="stat-sub">rata-rata semua LINE</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Overloaded</div>
+      <div class="stat-value" style="color:${overloaded?'var(--red)':'var(--green)'}">${overloaded}</div>
+      <div class="stat-sub">LINE >100% kapasitas</div>
+    </div>
+  `;
+
+  // bars
+  const barsEl = document.getElementById('lvc-bars');
+  barsEl.innerHTML = lvcData.map(d => {
+    const pct = Math.min(d.loadingPct, 120);
+    const color = d.loadingPct > 100 ? 'var(--red)' :
+                  d.loadingPct > 85 ? 'var(--orange)' :
+                  d.loadingPct > 65 ? 'var(--yellow)' : 'var(--green)';
+    return `
+      <div class="lvc-row">
+        <div class="lvc-label">${d.line}</div>
+        <div class="lvc-bar-wrap">
+          <div class="lvc-bar-fill" style="width:${pct}%;background:${color}">
+            ${pct > 15 ? `<span class="lvc-bar-text">${d.loadingPct.toFixed(1)}%</span>` : ''}
+          </div>
+        </div>
+        <div class="lvc-pct" style="color:${color}">${d.loadingPct.toFixed(1)}%</div>
+        <div class="lvc-detail">${d.totalQty.toLocaleString()} unit / ${d.processingHours.toFixed(1)} jam</div>
+      </div>
+    `;
+  }).join('');
+
+  // detail table
+  const tbody = document.getElementById('lvc-detail-tbody');
+  tbody.innerHTML = lvcData.map(d => {
+    const status = d.loadingPct > 100 ? '<span class="badge badge-red">OVERLOADED</span>' :
+                   d.loadingPct > 85 ? '<span class="badge badge-orange">WARNING</span>' :
+                   d.loadingPct > 0 ? '<span class="badge badge-green">OK</span>' :
+                   '<span class="badge" style="background:var(--surface2);color:var(--text3)">NO ORDER</span>';
+    return `
+      <tr>
+        <td><span class="badge badge-blue">${d.line}</span></td>
+        <td class="td-mono td-bold">${d.totalQty.toLocaleString()}</td>
+        <td class="td-mono">${d.processingHours.toFixed(2)}</td>
+        <td class="td-mono">${d.capacityHours.toFixed(2)}</td>
+        <td class="td-mono td-bold" style="color:${d.loadingPct>100?'var(--red)':d.loadingPct>85?'var(--orange)':'var(--green)'}">${d.loadingPct.toFixed(1)}%</td>
+        <td>${status}</td>
+        <td style="font-size:11px;color:var(--text3)">${d.shiftActive} × ${d.cap.workDays} hari</td>
+      </tr>
+    `;
+  }).join('');
+
+  // unmapped
+  const unEl = document.getElementById('lvc-unmapped');
+  const unTable = document.getElementById('lvc-unmapped-table');
+  if (unmapped.length) {
+    unEl.style.display='none';
+    unTable.style.display='';
+    document.getElementById('lvc-unmapped-tbody').innerHTML = unmapped.map(u=>`
+      <tr>
+        <td class="td-mono">${u.item}</td>
+        <td class="td-mono">${u.qty.toLocaleString()}</td>
+        <td><span class="badge badge-red">${u.reason}</span></td>
+      </tr>
+    `).join('');
+  } else {
+    unEl.style.display='';
+    unTable.style.display='none';
+  }
+}
+
+function exportLVC() {
+  const period = document.getElementById('lvc-period-select').value;
+  if (!period) { toast('Pilih periode terlebih dahulu','warning'); return; }
+  toast('Fitur export LVC akan segera hadir','info');
+}
+
+// ============================================================
+// MAN POWER
+// ============================================================
+function refreshMPPage() {
+  const sel = document.getElementById('mp-period-select');
+  const keys = Object.keys(state.orders).sort().reverse();
+  sel.innerHTML = '<option value="">-- Pilih Periode --</option>' +
+    keys.map(k=>`<option value="${k}">${periodLabel(k)}</option>`).join('');
+
+  // render MP param table
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  const tbody = document.getElementById('mp-param-tbody');
+  tbody.innerHTML = lines.length ? lines.map(line => {
+    const p = state.mpParams[line] || {std:0, loader:0, qc:0, note:''};
+    return `
+      <tr>
+        <td><span class="badge badge-blue">${line}</span></td>
+        <td><input class="shift-input" type="number" min="0" value="${p.std}" id="mp-std-${line.replace(/\s/g,'_')}" style="width:70px"></td>
+        <td><input class="shift-input" type="number" min="0" value="${p.loader}" id="mp-loader-${line.replace(/\s/g,'_')}" style="width:70px"></td>
+        <td><input class="shift-input" type="number" min="0" value="${p.qc}" id="mp-qc-${line.replace(/\s/g,'_')}" style="width:70px"></td>
+        <td><input class="form-control" type="text" value="${p.note}" id="mp-note-${line.replace(/\s/g,'_')}" style="width:200px" placeholder="Keterangan..."></td>
+      </tr>
+    `;
+  }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text3)">Database LINE belum diisi</td></tr>`;
+}
+
+function saveMPParams() {
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  lines.forEach(line => {
+    const key = line.replace(/\s/g,'_');
+    state.mpParams[line] = {
+      std: parseInt(document.getElementById(`mp-std-${key}`)?.value)||0,
+      loader: parseInt(document.getElementById(`mp-loader-${key}`)?.value)||0,
+      qc: parseInt(document.getElementById(`mp-qc-${key}`)?.value)||0,
+      note: document.getElementById(`mp-note-${key}`)?.value||'',
+    };
+  });
+  saveState();
+  calculateMP();
+  toast('Parameter MP tersimpan', 'success');
+}
+
+function calculateMP() {
+  const period = document.getElementById('mp-period-select').value;
+  const resultSection = document.getElementById('mp-result-section');
+  if (!period) { resultSection.style.display='none'; return; }
+
+  const cap = state.capacity[period] || {};
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+
+  resultSection.style.display='';
+  const tbody = document.getElementById('mp-result-tbody');
+
+  tbody.innerHTML = lines.map(line => {
+    const c = cap[line] || {s1:0, s2:0, s3:0};
+    const p = state.mpParams[line] || {std:0, loader:0, qc:0};
+    const activeShifts = (c.s1?1:0)+(c.s2?1:0)+(c.s3?1:0);
+    const mpStd = p.std * activeShifts;
+    const mpLoader = p.loader * activeShifts;
+    const mpQC = p.qc * activeShifts;
+    const total = mpStd + mpLoader + mpQC;
+    const shiftStr = [c.s1?'S1':'', c.s2?'S2':'', c.s3?'S3':''].filter(Boolean).join('+') || '-';
+
+    return `
+      <tr>
+        <td><span class="badge badge-blue">${line}</span></td>
+        <td style="font-size:11px;color:var(--text3)">${shiftStr} (${activeShifts} shift)</td>
+        <td class="td-mono td-bold">${mpStd}</td>
+        <td class="td-mono">${mpLoader}</td>
+        <td class="td-mono">${mpQC}</td>
+        <td class="td-mono td-bold" style="color:var(--accent);font-size:14px">${total}</td>
+        <td>${total ? '<span class="badge badge-green">AKTIF</span>' : '<span class="badge" style="background:var(--surface2);color:var(--text3)">IDLE</span>'}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function periodLabel(key) {
+  const [y, m] = key.split('-');
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  return `${months[parseInt(m)-1]} ${y}`;
+}
+
+function refreshAllPeriodDropdowns() {
+  const keys = Object.keys(state.orders).sort().reverse();
+  const opts = '<option value="">-- Semua Periode --</option>' +
+    keys.map(k=>`<option value="${k}">${periodLabel(k)}</option>`).join('');
+
+  ['filter-order-period','cap-period-select','lvc-period-select','mp-period-select'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cur = el.value;
+    if (id === 'filter-order-period') {
+      el.innerHTML = '<option value="">-- Semua Periode --</option>' + keys.map(k=>`<option value="${k}">${periodLabel(k)}</option>`).join('');
+    } else {
+      el.innerHTML = '<option value="">-- Pilih Periode --</option>' + keys.map(k=>`<option value="${k}">${periodLabel(k)}</option>`).join('');
+    }
+    if (cur) el.value = cur;
+  });
+  updateBadge();
+}
+
+// ============================================================
+// INIT
+// ============================================================
+loadState();
+showPage('upload-order');
+updateBadge();
+renderDbLine();
+renderDbPCS();
+refreshAllPeriodDropdowns();
+
+// set default month/year
+const now = new Date();
+document.getElementById('order-month').value = now.getMonth()+1;
+document.getElementById('order-year').value = now.getFullYear();
 </script>
 </body>
 </html>
