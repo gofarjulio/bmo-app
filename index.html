@@ -166,8 +166,14 @@
   }
   .mobile-close-btn:hover { color: var(--red); border-color: var(--red); }
 
-  /* Hamburger btn — hidden everywhere, no longer used */
-  .hamburger-btn { display: none !important; }
+  /* Hamburger btn in topbar (hidden on desktop/tablet, shown on mobile) */
+  .hamburger-btn {
+    display: none; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: var(--radius2);
+    border: 1px solid var(--border2); background: transparent;
+    cursor: pointer; color: var(--text2); transition: all 0.15s; flex-shrink: 0;
+  }
+  .hamburger-btn:hover { color: var(--text); border-color: var(--text3); background: var(--surface2); }
 
   /* NAV */
   .sidebar-nav { padding: 8px 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
@@ -258,27 +264,23 @@
     .grid-3 { grid-template-columns: 1fr 1fr; }
   }
 
-  /* ── MOBILE (≤ 768px): drawer mode ── */
+  /* ── MOBILE (≤ 768px): drawer mode — original behavior ── */
   @media (max-width: 768px) {
+    .hamburger-btn { display: flex; }
     .sidebar-spacer { display: none !important; }
     .sidebar {
       width: 240px !important;
       transform: translateX(-100%);
-      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1),
-                  box-shadow 0.25s ease;
-      box-shadow: none;
+      transition: transform 0.25s ease;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
     }
-    .sidebar.mobile-open {
-      transform: translateX(0);
-      box-shadow: 6px 0 32px rgba(0,0,0,0.5);
-    }
+    .sidebar.mobile-open { transform: translateX(0); }
     .sidebar .collapsible-text { opacity: 1 !important; max-width: 200px !important; }
     .sidebar .nav-section-label { opacity: 1 !important; }
     .sidebar .sidebar-logo { padding: 12px 10px 12px 14px !important; flex-direction: row !important; justify-content: space-between !important; }
-    .sidebar .nav-item { padding: 8px 10px !important; justify-content: flex-start !important; gap: 10px !important; }
-    .sidebar .sidebar-footer { padding: 10px 16px !important; justify-content: flex-start !important; }
-    .sidebar .status-dot { margin-right: 8px !important; }
-    /* on mobile: hide the toggle (minimize) btn, show close btn instead */
+    .sidebar .nav-item { padding: 10px 16px !important; justify-content: flex-start !important; gap: 10px !important; }
+    .sidebar .sidebar-footer { padding: 12px 16px !important; justify-content: flex-start !important; }
+    .sidebar .status-dot { margin-right: 6px !important; }
     .toggle-btn { display: none !important; }
     .mobile-close-btn { display: flex !important; }
     .page { padding: 12px !important; }
@@ -1606,7 +1608,18 @@ function closeMobileSidebar() {
   document.body.style.overflow = '';
 }
 
-// (hamburger removed — toggle btn now lives in sidebar header)
+// Inject hamburger btn into every topbar (mobile only)
+function injectHamburgers() {
+  document.querySelectorAll('.topbar').forEach(tb => {
+    if (tb.querySelector('.hamburger-btn')) return;
+    const btn = document.createElement('button');
+    btn.className = 'hamburger-btn';
+    btn.title = 'Buka menu';
+    btn.onclick = openMobileSidebar;
+    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+    tb.insertBefore(btn, tb.firstChild);
+  });
+}
 
 // Close mobile sidebar when navigating
 const _origShowPage = typeof showPage === 'function' ? showPage : null;
@@ -2932,6 +2945,9 @@ document.getElementById('order-year').value = now.getFullYear();
     }
   }
 })();
+
+// inject hamburger buttons into all topbars (mobile)
+injectHamburgers();
 
 // tampilkan dashboard sebagai halaman awal
 showPage('dashboard');
