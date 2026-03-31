@@ -53,7 +53,7 @@
   ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
 
   /* LAYOUT */
-  .app { display: flex; height: 100vh; }
+  .app { display: flex; height: 100vh; overflow: hidden; }
 
   /* OVERLAY mobile */
   .sidebar-overlay {
@@ -62,75 +62,100 @@
   }
   .sidebar-overlay.active { display: block; }
 
-  /* SIDEBAR */
+  /* ===================== SIDEBAR — claude.ai style ===================== */
   .sidebar {
-    width: 220px; min-width: 220px;
+    /* Fixed to viewport so it stays visible on scroll */
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    width: 240px;
     background: var(--surface);
     border-right: 1px solid var(--border);
     display: flex; flex-direction: column;
-    padding: 0; overflow: hidden;
-    transition: width 0.22s ease, min-width 0.22s ease;
-    flex-shrink: 0; z-index: 100;
+    overflow: hidden;
+    /* Smooth width transition */
+    transition: width 0.26s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.26s ease;
+    z-index: 100;
+    will-change: width;
+  }
+
+  /* Spacer so main content doesn't hide under fixed sidebar */
+  .sidebar-spacer {
+    flex-shrink: 0;
+    width: 240px;
+    transition: width 0.26s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   /* Desktop collapsed */
-  .sidebar.collapsed { width: 56px; min-width: 56px; }
-  .sidebar.collapsed .logo-tag,
-  .sidebar.collapsed .logo-title,
-  .sidebar.collapsed .nav-section-label,
-  .sidebar.collapsed .nav-item-label,
-  .sidebar.collapsed .nav-badge,
-  .sidebar.collapsed .status-text,
-  .sidebar.collapsed .toggle-btn-label { display: none !important; }
-  .sidebar.collapsed .sidebar-logo { padding: 0; height: 52px; justify-content: center; }
-  .sidebar.collapsed .nav-item { padding: 10px 0; justify-content: center; gap: 0; }
-  .sidebar.collapsed .nav-icon { width: 18px; height: 18px; opacity: 1; }
-  .sidebar.collapsed .sidebar-footer { padding: 12px 0; justify-content: center; }
-  .sidebar.collapsed .status-dot { margin-right: 0; }
-  .sidebar.collapsed .toggle-btn { padding: 10px 0; justify-content: center; }
-  .sidebar.collapsed .mobile-close-btn { display: none !important; }
-  /* tooltip on collapsed */
-  .sidebar.collapsed .nav-item { position: relative; }
-  .sidebar.collapsed .nav-item:hover::after {
-    content: attr(data-label);
-    position: absolute; left: 62px; top: 50%; transform: translateY(-50%);
-    background: var(--surface2); border: 1px solid var(--border2);
-    color: var(--text); font-size: 11px; font-weight: 500;
-    padding: 5px 10px; border-radius: 4px; white-space: nowrap;
-    z-index: 200; pointer-events: none;
+  .sidebar.collapsed { width: 56px; box-shadow: none; }
+  .sidebar-spacer.collapsed { width: 56px; }
+
+  /* Hide text labels when collapsed — opacity + width trick for smooth fade */
+  .sidebar .collapsible-text {
+    overflow: hidden; white-space: nowrap;
+    transition: opacity 0.18s ease, max-width 0.26s cubic-bezier(0.4,0,0.2,1);
+    opacity: 1; max-width: 200px;
+    display: inline-block;
+  }
+  .sidebar.collapsed .collapsible-text {
+    opacity: 0; max-width: 0; pointer-events: none;
   }
 
+  /* Section labels hide on collapse */
+  .sidebar.collapsed .nav-section-label { opacity: 0; pointer-events: none; }
+
+  /* Logo area */
   .sidebar-logo {
-    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    padding: 14px 14px 14px 16px;
+    border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; min-height: 52px; flex-shrink: 0;
+    gap: 8px; min-height: 56px; flex-shrink: 0;
   }
-  .logo-text { flex: 1; overflow: hidden; }
+  .logo-inner { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; min-width: 0; }
+  .logo-icon-wrap {
+    width: 30px; height: 30px; border-radius: 8px;
+    background: var(--accent-dim); border: 1px solid rgba(0,212,255,0.25);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .logo-text { flex: 1; overflow: hidden; min-width: 0; }
   .logo-tag {
-    font-family: var(--mono); font-size: 9px; color: var(--accent);
-    letter-spacing: 3px; text-transform: uppercase; margin-bottom: 3px; white-space: nowrap;
+    font-family: var(--mono); font-size: 8.5px; color: var(--accent);
+    letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 2px;
+    white-space: nowrap; overflow: hidden;
   }
   .logo-title {
-    font-size: 12px; font-weight: 700; color: var(--text);
-    line-height: 1.2; letter-spacing: -0.3px; white-space: nowrap;
+    font-size: 11.5px; font-weight: 700; color: var(--text);
+    line-height: 1.2; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden;
   }
 
-  /* Toggle collapse btn (desktop) */
+  /* === TOGGLE BUTTON — floats at bottom like claude.ai === */
   .toggle-btn {
     display: flex; align-items: center; gap: 8px;
-    padding: 9px 16px; cursor: pointer; color: var(--text3);
+    padding: 10px 16px; cursor: pointer; color: var(--text3);
     font-size: 11.5px; font-weight: 500; background: none; border: none;
     border-top: 1px solid var(--border); width: 100%;
-    transition: all 0.15s; font-family: var(--sans); flex-shrink: 0;
+    transition: color 0.15s, background 0.15s;
+    font-family: var(--sans); flex-shrink: 0;
   }
   .toggle-btn:hover { color: var(--text2); background: var(--accent-dim2); }
+  .toggle-btn-icon {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid var(--border2); background: var(--surface2);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .toggle-btn:hover .toggle-btn-icon { border-color: var(--accent); background: var(--accent-dim); }
+  .toggle-btn-icon svg { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); }
+  .sidebar.collapsed .toggle-btn-icon svg { transform: rotate(180deg); }
+  .sidebar.collapsed .toggle-btn { padding: 10px 0; justify-content: center; }
 
   /* Mobile close btn */
   .mobile-close-btn {
     display: none; align-items: center; justify-content: center;
-    width: 26px; height: 26px; border-radius: var(--radius2);
+    width: 28px; height: 28px; border-radius: var(--radius2);
     border: 1px solid var(--border2); background: transparent;
     cursor: pointer; color: var(--text3); flex-shrink: 0;
+    transition: color 0.15s, border-color 0.15s;
   }
   .mobile-close-btn:hover { color: var(--red); border-color: var(--red); }
 
@@ -143,29 +168,33 @@
   }
   .hamburger-btn:hover { color: var(--text); border-color: var(--text3); background: var(--surface2); }
 
-  .sidebar-nav { padding: 8px 0; flex: 1; overflow-y: auto; overflow-x: hidden; }
+  /* NAV */
+  .sidebar-nav { padding: 8px 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
 
   .nav-section-label {
     font-family: var(--mono); font-size: 9px; color: var(--text3);
     letter-spacing: 2px; text-transform: uppercase;
-    padding: 10px 16px 5px; white-space: nowrap;
+    padding: 10px 10px 5px; white-space: nowrap;
+    transition: opacity 0.18s ease;
   }
 
   .nav-item {
     display: flex; align-items: center; gap: 10px;
-    padding: 9px 16px; cursor: pointer; color: var(--text2);
-    font-size: 12.5px; font-weight: 500; transition: all 0.15s;
+    padding: 8px 10px; cursor: pointer; color: var(--text2);
+    font-size: 12.5px; font-weight: 500;
+    transition: color 0.15s, background 0.15s;
     position: relative; border: none; background: none;
     width: 100%; text-align: left; white-space: nowrap;
+    border-radius: 8px; margin-bottom: 2px;
   }
-  .nav-item:hover { color: var(--text); background: var(--accent-dim2); }
-  .nav-item.active { color: var(--accent); background: var(--accent-dim); }
-  .nav-item.active::before {
-    content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
-    width: 2px; background: var(--accent); border-radius: 0 2px 2px 0;
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active {
+    color: var(--accent); background: var(--accent-dim);
   }
+  .nav-item.active::before { display: none; } /* remove old left bar — rounded bg replaces it */
 
-  .nav-icon { width: 16px; height: 16px; opacity: 0.8; flex-shrink: 0; }
+  .nav-icon { width: 17px; height: 17px; opacity: 0.75; flex-shrink: 0; transition: opacity 0.15s; }
+  .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
 
   .nav-badge {
     margin-left: auto; background: var(--accent-dim); color: var(--accent);
@@ -173,19 +202,35 @@
     border-radius: 10px; border: 1px solid rgba(0,212,255,0.2); flex-shrink: 0;
   }
 
+  /* Tooltip when collapsed */
+  .sidebar.collapsed .nav-item { padding: 9px 0; justify-content: center; border-radius: 8px; }
+  .sidebar.collapsed .nav-item:hover::after {
+    content: attr(data-label);
+    position: fixed;
+    left: 64px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); font-size: 11px; font-weight: 500;
+    padding: 6px 11px; border-radius: 6px; white-space: nowrap;
+    z-index: 9999; pointer-events: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  /* Footer */
   .sidebar-footer {
-    padding: 12px 16px; border-top: 1px solid var(--border);
+    padding: 10px 16px; border-top: 1px solid var(--border);
     display: flex; align-items: center; flex-shrink: 0;
   }
+  .sidebar.collapsed .sidebar-footer { padding: 10px 0; justify-content: center; }
   .status-dot {
-    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
-    background: var(--green); margin-right: 6px;
+    display: inline-block; width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); margin-right: 8px;
     animation: pulse-dot 2s infinite; flex-shrink: 0;
   }
+  .sidebar.collapsed .status-dot { margin-right: 0; }
   @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
   .status-text { font-size: 11px; color: var(--text2); white-space: nowrap; }
 
-  /* MAIN CONTENT */
+  /* MAIN CONTENT — takes remaining space after sidebar spacer */
   .main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-width: 0; }
 
   .topbar {
@@ -200,20 +245,25 @@
   /* MOBILE */
   @media (max-width: 768px) {
     .hamburger-btn { display: flex; }
+    .sidebar-spacer { display: none !important; }
     .sidebar {
-      position: fixed; left: 0; top: 0; bottom: 0;
-      width: 240px !important; min-width: 240px !important;
+      width: 240px !important;
       transform: translateX(-100%);
-      transition: transform 0.25s ease;
-      box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+      transition: transform 0.25s cubic-bezier(0.4,0,0.2,1),
+                  box-shadow 0.25s ease;
+      box-shadow: none;
     }
-    .sidebar.mobile-open { transform: translateX(0); }
-    .sidebar .logo-tag,.sidebar .logo-title,.sidebar .nav-section-label,
-    .sidebar .nav-item-label,.sidebar .nav-badge,.sidebar .status-text { display: unset !important; }
-    .sidebar .sidebar-logo { padding: 14px 16px !important; justify-content: space-between !important; }
-    .sidebar .nav-item { padding: 10px 16px !important; justify-content: flex-start !important; gap: 10px !important; }
-    .sidebar .sidebar-footer { padding: 12px 16px !important; justify-content: flex-start !important; }
-    .sidebar .status-dot { margin-right: 6px !important; }
+    .sidebar.mobile-open {
+      transform: translateX(0);
+      box-shadow: 6px 0 32px rgba(0,0,0,0.5);
+    }
+    /* Force show all text labels on mobile */
+    .sidebar .collapsible-text { opacity: 1 !important; max-width: 200px !important; }
+    .sidebar .nav-section-label { opacity: 1 !important; }
+    .sidebar .sidebar-logo { padding: 14px 14px 14px 16px !important; justify-content: space-between !important; }
+    .sidebar .nav-item { padding: 8px 10px !important; justify-content: flex-start !important; gap: 10px !important; }
+    .sidebar .sidebar-footer { padding: 10px 16px !important; justify-content: flex-start !important; }
+    .sidebar .status-dot { margin-right: 8px !important; }
     .sidebar .toggle-btn { display: none !important; }
     .mobile-close-btn { display: flex !important; }
     .page { padding: 12px !important; }
@@ -715,12 +765,18 @@
   <!-- OVERLAY (mobile) -->
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeMobileSidebar()"></div>
 
-  <!-- SIDEBAR -->
+  <!-- SIDEBAR (fixed) -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="logo-text">
-        <div class="logo-tag">BPMS v1.0</div>
-        <div class="logo-title">Battery Production<br>Management System</div>
+      <div class="logo-inner">
+        <!-- Battery icon -->
+        <div class="logo-icon-wrap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.2"><rect x="2" y="7" width="18" height="11" rx="2"/><path d="M22 11v3"/><line x1="6" y1="12.5" x2="10" y2="12.5"/><line x1="8" y1="10.5" x2="8" y2="14.5"/></svg>
+        </div>
+        <div class="logo-text collapsible-text">
+          <div class="logo-tag">BPMS v1.0</div>
+          <div class="logo-title">Battery Production<br>Management</div>
+        </div>
       </div>
       <!-- mobile close -->
       <button class="mobile-close-btn" onclick="closeMobileSidebar()" title="Tutup menu">
@@ -732,56 +788,63 @@
       <div class="nav-section-label">Overview</div>
       <button class="nav-item" onclick="showPage('dashboard')" id="nav-dashboard" data-label="Dashboard">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        <span class="nav-item-label">Dashboard</span>
+        <span class="nav-item-label collapsible-text">Dashboard</span>
       </button>
 
       <div class="nav-section-label">Database</div>
       <button class="nav-item" onclick="showPage('db-line')" id="nav-db-line" data-label="Database LINE">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
-        <span class="nav-item-label">Database LINE</span>
+        <span class="nav-item-label collapsible-text">Database LINE</span>
       </button>
       <button class="nav-item" onclick="showPage('db-pcs')" id="nav-db-pcs" data-label="Database PCS">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        <span class="nav-item-label">Database PCS</span>
+        <span class="nav-item-label collapsible-text">Database PCS</span>
       </button>
 
       <div class="nav-section-label">Data Order</div>
       <button class="nav-item" onclick="showPage('upload-order')" id="nav-upload-order" data-label="Upload Order">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-        <span class="nav-item-label">Upload Order</span>
+        <span class="nav-item-label collapsible-text">Upload Order</span>
       </button>
       <button class="nav-item" onclick="showPage('order-list')" id="nav-order-list" data-label="Data Order">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-        <span class="nav-item-label">Data Order</span>
-        <span class="nav-badge" id="badge-orders">0</span>
+        <span class="nav-item-label collapsible-text">Data Order</span>
+        <span class="nav-badge collapsible-text" id="badge-orders">0</span>
       </button>
 
       <div class="nav-section-label">Analisis</div>
       <button class="nav-item" onclick="showPage('lvc')" id="nav-lvc" data-label="LVC">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        <span class="nav-item-label">LVC</span>
+        <span class="nav-item-label collapsible-text">LVC</span>
       </button>
       <button class="nav-item" onclick="showPage('capacity')" id="nav-capacity" data-label="Setting Kapasitas">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        <span class="nav-item-label">Setting Kapasitas</span>
+        <span class="nav-item-label collapsible-text">Setting Kapasitas</span>
       </button>
       <button class="nav-item" onclick="showPage('mp')" id="nav-mp" data-label="Man Power">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-        <span class="nav-item-label">Man Power</span>
+        <span class="nav-item-label collapsible-text">Man Power</span>
       </button>
     </nav>
 
     <div class="sidebar-footer">
       <span class="status-dot"></span>
-      <span class="status-text">LocalStorage Active</span>
+      <span class="status-text collapsible-text">LocalStorage Active</span>
     </div>
 
-    <!-- Desktop collapse toggle -->
-    <button class="toggle-btn" onclick="toggleSidebar()" id="toggle-btn">
-      <svg id="toggle-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
-      <span class="toggle-btn-label">Minimize</span>
+    <!-- Desktop collapse toggle — claude.ai style -->
+    <button class="toggle-btn" onclick="toggleSidebar()" id="toggle-btn" title="Toggle sidebar">
+      <div class="toggle-btn-icon">
+        <svg id="toggle-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </div>
+      <span class="toggle-btn-label collapsible-text">Minimize</span>
     </button>
   </aside>
+
+  <!-- SPACER: pushes main content away from fixed sidebar -->
+  <div class="sidebar-spacer" id="sidebar-spacer"></div>
 
   <!-- MAIN -->
   <main class="main">
@@ -1467,16 +1530,10 @@ let sidebarCollapsed = false;
 
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
-  const icon = document.getElementById('toggle-icon');
-  const label = sidebar.querySelector('.toggle-btn-label');
+  const spacer = document.getElementById('sidebar-spacer');
   sidebarCollapsed = !sidebarCollapsed;
   sidebar.classList.toggle('collapsed', sidebarCollapsed);
-  if (icon) {
-    icon.innerHTML = sidebarCollapsed
-      ? '<path d="M9 18l6-6-6-6"/>'   // chevron right = expand
-      : '<path d="M15 18l-6-6 6-6"/>'; // chevron left  = collapse
-  }
-  if (label) label.textContent = sidebarCollapsed ? '' : 'Minimize';
+  if (spacer) spacer.classList.toggle('collapsed', sidebarCollapsed);
   localStorage.setItem('bpms_sidebar_collapsed', sidebarCollapsed ? '1' : '0');
 }
 
@@ -2811,8 +2868,8 @@ document.getElementById('order-year').value = now.getFullYear();
 if (localStorage.getItem('bpms_sidebar_collapsed') === '1') {
   sidebarCollapsed = true;
   document.getElementById('sidebar').classList.add('collapsed');
-  const icon = document.getElementById('toggle-icon');
-  if (icon) icon.innerHTML = '<path d="M9 18l6-6-6-6"/>';
+  const spacer = document.getElementById('sidebar-spacer');
+  if (spacer) spacer.classList.add('collapsed');
 }
 
 // inject hamburger buttons into all topbars
