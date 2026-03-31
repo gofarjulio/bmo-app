@@ -159,9 +159,9 @@
   }
   .mobile-close-btn:hover { color: var(--red); border-color: var(--red); }
 
-  /* Hamburger btn in topbar (hidden on desktop) */
+  /* Hamburger btn in topbar — visible on ALL screen sizes */
   .hamburger-btn {
-    display: none; align-items: center; justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     width: 34px; height: 34px; border-radius: var(--radius2);
     border: 1px solid var(--border2); background: transparent;
     cursor: pointer; color: var(--text2); transition: all 0.15s; flex-shrink: 0;
@@ -260,7 +260,6 @@
 
   /* ── MOBILE (≤ 768px): drawer mode ── */
   @media (max-width: 768px) {
-    .hamburger-btn { display: flex; }
     .sidebar-spacer { display: none !important; }
     .sidebar {
       width: 240px !important;
@@ -1611,9 +1610,15 @@ function injectHamburgers() {
     if (tb.querySelector('.hamburger-btn')) return;
     const btn = document.createElement('button');
     btn.className = 'hamburger-btn';
-    btn.title = 'Buka menu';
-    btn.onclick = openMobileSidebar;
-    btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
+    btn.title = 'Toggle menu';
+    btn.onclick = function() {
+      if (window.innerWidth <= 768) {
+        openMobileSidebar();
+      } else {
+        toggleSidebar();
+      }
+    };
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
     tb.insertBefore(btn, tb.firstChild);
   });
 }
