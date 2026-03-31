@@ -104,12 +104,19 @@
   /* Section labels hide on collapse */
   .sidebar.collapsed .nav-section-label { opacity: 0; pointer-events: none; }
 
-  /* Logo area */
+  /* Logo area — toggle btn lives here on the right */
   .sidebar-logo {
-    padding: 14px 14px 14px 16px;
+    padding: 12px 10px 12px 14px;
     border-bottom: 1px solid var(--border);
     display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; min-height: 56px; flex-shrink: 0;
+    gap: 6px; min-height: 52px; flex-shrink: 0;
+  }
+  /* collapsed: center everything vertically */
+  .sidebar.collapsed .sidebar-logo {
+    padding: 12px 0;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
   }
   .logo-inner { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; min-width: 0; }
   .logo-icon-wrap {
@@ -128,26 +135,26 @@
     line-height: 1.2; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden;
   }
 
-  /* === TOGGLE BUTTON — floats at bottom like claude.ai === */
+  /* === TOGGLE BUTTON — atas di dalam header, ikon saja === */
   .toggle-btn {
-    display: flex; align-items: center; gap: 8px;
-    padding: 10px 16px; cursor: pointer; color: var(--text3);
-    font-size: 11.5px; font-weight: 500; background: none; border: none;
-    border-top: 1px solid var(--border); width: 100%;
-    transition: color 0.15s, background 0.15s;
-    font-family: var(--sans); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; flex-shrink: 0;
+    border-radius: 7px; cursor: pointer;
+    color: var(--text3); background: transparent;
+    border: 1px solid transparent;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+    padding: 0;
   }
-  .toggle-btn:hover { color: var(--text2); background: var(--accent-dim2); }
-  .toggle-btn-icon {
-    width: 28px; height: 28px; border-radius: 6px;
-    border: 1px solid var(--border2); background: var(--surface2);
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    transition: background 0.15s, border-color 0.15s;
+  .toggle-btn:hover {
+    color: var(--text2); background: var(--surface2);
+    border-color: var(--border2);
   }
-  .toggle-btn:hover .toggle-btn-icon { border-color: var(--accent); background: var(--accent-dim); }
-  .toggle-btn-icon svg { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); }
-  .sidebar.collapsed .toggle-btn-icon svg { transform: rotate(180deg); }
-  .sidebar.collapsed .toggle-btn { padding: 10px 0; justify-content: center; }
+  /* rotate arrow when collapsed */
+  .toggle-btn svg { transition: transform 0.26s cubic-bezier(0.4,0,0.2,1); }
+  .sidebar.collapsed .toggle-btn svg { transform: rotate(180deg); }
+  /* hide label — we only use the icon now */
+  .toggle-btn-label { display: none !important; }
+  .toggle-btn-icon { display: contents; } /* unwrap the inner div */
 
   /* Mobile close btn */
   .mobile-close-btn {
@@ -159,14 +166,8 @@
   }
   .mobile-close-btn:hover { color: var(--red); border-color: var(--red); }
 
-  /* Hamburger btn in topbar — visible on ALL screen sizes */
-  .hamburger-btn {
-    display: flex; align-items: center; justify-content: center;
-    width: 34px; height: 34px; border-radius: var(--radius2);
-    border: 1px solid var(--border2); background: transparent;
-    cursor: pointer; color: var(--text2); transition: all 0.15s; flex-shrink: 0;
-  }
-  .hamburger-btn:hover { color: var(--text); border-color: var(--text3); background: var(--surface2); }
+  /* Hamburger btn — hidden everywhere, no longer used */
+  .hamburger-btn { display: none !important; }
 
   /* NAV */
   .sidebar-nav { padding: 8px 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
@@ -251,9 +252,8 @@
     .sidebar:not(.force-expanded) .nav-item { padding: 9px 0 !important; justify-content: center !important; }
     .sidebar:not(.force-expanded) .sidebar-footer { padding: 10px 0 !important; justify-content: center !important; }
     .sidebar:not(.force-expanded) .status-dot { margin-right: 0 !important; }
-    .sidebar:not(.force-expanded) .toggle-btn { padding: 10px 0 !important; justify-content: center !important; }
-    .sidebar:not(.force-expanded) .sidebar-logo { padding: 0 !important; height: 56px; justify-content: center !important; }
-    .sidebar:not(.force-expanded) .toggle-btn-icon svg { transform: rotate(180deg); }
+    .sidebar:not(.force-expanded) .sidebar-logo { padding: 12px 0 !important; justify-content: center !important; flex-direction: column !important; gap: 4px !important; }
+    .sidebar:not(.force-expanded) .toggle-btn svg { transform: rotate(180deg); }
     .grid-4 { grid-template-columns: 1fr 1fr; }
     .grid-3 { grid-template-columns: 1fr 1fr; }
   }
@@ -272,14 +272,14 @@
       transform: translateX(0);
       box-shadow: 6px 0 32px rgba(0,0,0,0.5);
     }
-    /* Force show all text labels on mobile */
     .sidebar .collapsible-text { opacity: 1 !important; max-width: 200px !important; }
     .sidebar .nav-section-label { opacity: 1 !important; }
-    .sidebar .sidebar-logo { padding: 14px 14px 14px 16px !important; justify-content: space-between !important; }
+    .sidebar .sidebar-logo { padding: 12px 10px 12px 14px !important; flex-direction: row !important; justify-content: space-between !important; }
     .sidebar .nav-item { padding: 8px 10px !important; justify-content: flex-start !important; gap: 10px !important; }
     .sidebar .sidebar-footer { padding: 10px 16px !important; justify-content: flex-start !important; }
     .sidebar .status-dot { margin-right: 8px !important; }
-    .sidebar .toggle-btn { display: none !important; }
+    /* on mobile: hide the toggle (minimize) btn, show close btn instead */
+    .toggle-btn { display: none !important; }
     .mobile-close-btn { display: flex !important; }
     .page { padding: 12px !important; }
     .grid-4 { grid-template-columns: 1fr 1fr !important; }
@@ -793,7 +793,18 @@
           <div class="logo-title">Battery Production<br>Management</div>
         </div>
       </div>
-      <!-- mobile close -->
+
+      <!-- Toggle btn (desktop & tablet) — pojok kanan atas -->
+      <button class="toggle-btn" onclick="toggleSidebar()" id="toggle-btn" title="Toggle sidebar">
+        <div class="toggle-btn-icon">
+          <svg id="toggle-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M15 18l-6-6 6-6"/>
+          </svg>
+        </div>
+        <span class="toggle-btn-label"></span>
+      </button>
+
+      <!-- Mobile close btn -->
       <button class="mobile-close-btn" onclick="closeMobileSidebar()" title="Tutup menu">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
@@ -847,15 +858,6 @@
       <span class="status-text collapsible-text">LocalStorage Active</span>
     </div>
 
-    <!-- Desktop collapse toggle — claude.ai style -->
-    <button class="toggle-btn" onclick="toggleSidebar()" id="toggle-btn" title="Toggle sidebar">
-      <div class="toggle-btn-icon">
-        <svg id="toggle-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
-      </div>
-      <span class="toggle-btn-label collapsible-text">Minimize</span>
-    </button>
   </aside>
 
   <!-- SPACER: pushes main content away from fixed sidebar -->
@@ -1604,24 +1606,7 @@ function closeMobileSidebar() {
   document.body.style.overflow = '';
 }
 
-// Inject hamburger btn into every topbar
-function injectHamburgers() {
-  document.querySelectorAll('.topbar').forEach(tb => {
-    if (tb.querySelector('.hamburger-btn')) return;
-    const btn = document.createElement('button');
-    btn.className = 'hamburger-btn';
-    btn.title = 'Toggle menu';
-    btn.onclick = function() {
-      if (window.innerWidth <= 768) {
-        openMobileSidebar();
-      } else {
-        toggleSidebar();
-      }
-    };
-    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>`;
-    tb.insertBefore(btn, tb.firstChild);
-  });
-}
+// (hamburger removed — toggle btn now lives in sidebar header)
 
 // Close mobile sidebar when navigating
 const _origShowPage = typeof showPage === 'function' ? showPage : null;
@@ -2947,9 +2932,6 @@ document.getElementById('order-year').value = now.getFullYear();
     }
   }
 })();
-
-// inject hamburger buttons into all topbars
-injectHamburgers();
 
 // tampilkan dashboard sebagai halaman awal
 showPage('dashboard');
