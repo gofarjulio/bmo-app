@@ -242,7 +242,23 @@
   .topbar-sub { font-size: 11px; color: var(--text3); font-family: var(--mono); white-space: nowrap; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
 
-  /* MOBILE */
+  /* ── TABLET (769px – 1100px): auto-collapse, keep toggle btn ── */
+  @media (min-width: 769px) and (max-width: 1100px) {
+    .sidebar:not(.force-expanded) { width: 56px !important; }
+    .sidebar-spacer:not(.force-expanded) { width: 56px !important; }
+    .sidebar:not(.force-expanded) .collapsible-text { opacity: 0 !important; max-width: 0 !important; pointer-events: none; }
+    .sidebar:not(.force-expanded) .nav-section-label { opacity: 0 !important; }
+    .sidebar:not(.force-expanded) .nav-item { padding: 9px 0 !important; justify-content: center !important; }
+    .sidebar:not(.force-expanded) .sidebar-footer { padding: 10px 0 !important; justify-content: center !important; }
+    .sidebar:not(.force-expanded) .status-dot { margin-right: 0 !important; }
+    .sidebar:not(.force-expanded) .toggle-btn { padding: 10px 0 !important; justify-content: center !important; }
+    .sidebar:not(.force-expanded) .sidebar-logo { padding: 0 !important; height: 56px; justify-content: center !important; }
+    .sidebar:not(.force-expanded) .toggle-btn-icon svg { transform: rotate(180deg); }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ── MOBILE (≤ 768px): drawer mode ── */
   @media (max-width: 768px) {
     .hamburger-btn { display: flex; }
     .sidebar-spacer { display: none !important; }
@@ -1524,18 +1540,58 @@ function loadState() {
 }
 
 // ============================================================
-// SIDEBAR TOGGLE (desktop collapse + mobile drawer)
+// SIDEBAR TOGGLE (desktop collapse + tablet auto-collapse + mobile drawer)
 // ============================================================
 let sidebarCollapsed = false;
 
+// Returns true if current viewport is tablet range
+function isTablet() {
+  return window.innerWidth >= 769 && window.innerWidth <= 1100;
+}
+
 function toggleSidebar() {
   const sidebar = document.getElementById('sidebar');
-  const spacer = document.getElementById('sidebar-spacer');
-  sidebarCollapsed = !sidebarCollapsed;
-  sidebar.classList.toggle('collapsed', sidebarCollapsed);
-  if (spacer) spacer.classList.toggle('collapsed', sidebarCollapsed);
-  localStorage.setItem('bpms_sidebar_collapsed', sidebarCollapsed ? '1' : '0');
+  const spacer  = document.getElementById('sidebar-spacer');
+
+  if (isTablet()) {
+    // On tablet: default is collapsed (no .force-expanded).
+    // Toggle = add/remove force-expanded
+    const expanded = sidebar.classList.toggle('force-expanded');
+    if (spacer) spacer.classList.toggle('force-expanded', expanded);
+    localStorage.setItem('bpms_tablet_expanded', expanded ? '1' : '0');
+  } else {
+    // On desktop: toggle collapsed
+    sidebarCollapsed = !sidebarCollapsed;
+    sidebar.classList.toggle('collapsed', sidebarCollapsed);
+    if (spacer) spacer.classList.toggle('collapsed', sidebarCollapsed);
+    localStorage.setItem('bpms_sidebar_collapsed', sidebarCollapsed ? '1' : '0');
+  }
 }
+
+// Re-apply correct sidebar state when window is resized
+window.addEventListener('resize', () => {
+  const sidebar = document.getElementById('sidebar');
+  const spacer  = document.getElementById('sidebar-spacer');
+  if (!sidebar) return;
+
+  if (isTablet()) {
+    // Remove desktop collapsed class — tablet uses CSS :not(.force-expanded)
+    sidebar.classList.remove('collapsed');
+    if (spacer) spacer.classList.remove('collapsed');
+    // Restore tablet expanded preference
+    const tabletExpanded = localStorage.getItem('bpms_tablet_expanded') === '1';
+    sidebar.classList.toggle('force-expanded', tabletExpanded);
+    if (spacer) spacer.classList.toggle('force-expanded', tabletExpanded);
+  } else if (window.innerWidth > 1100) {
+    // Back to desktop: remove force-expanded, restore desktop collapsed pref
+    sidebar.classList.remove('force-expanded');
+    if (spacer) spacer.classList.remove('force-expanded');
+    if (sidebarCollapsed) {
+      sidebar.classList.add('collapsed');
+      if (spacer) spacer.classList.add('collapsed');
+    }
+  }
+});
 
 function openMobileSidebar() {
   document.getElementById('sidebar').classList.add('mobile-open');
@@ -2864,13 +2920,28 @@ const now = new Date();
 document.getElementById('order-month').value = now.getMonth()+1;
 document.getElementById('order-year').value = now.getFullYear();
 
-// restore sidebar collapsed state
-if (localStorage.getItem('bpms_sidebar_collapsed') === '1') {
-  sidebarCollapsed = true;
-  document.getElementById('sidebar').classList.add('collapsed');
-  const spacer = document.getElementById('sidebar-spacer');
-  if (spacer) spacer.classList.add('collapsed');
-}
+// restore sidebar state based on viewport
+(function initSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const spacer  = document.getElementById('sidebar-spacer');
+  if (!sidebar) return;
+
+  if (isTablet()) {
+    // Tablet: collapsed by default, restore if user had expanded
+    const tabletExpanded = localStorage.getItem('bpms_tablet_expanded') === '1';
+    if (tabletExpanded) {
+      sidebar.classList.add('force-expanded');
+      if (spacer) spacer.classList.add('force-expanded');
+    }
+  } else if (window.innerWidth > 1100) {
+    // Desktop: restore collapsed pref
+    if (localStorage.getItem('bpms_sidebar_collapsed') === '1') {
+      sidebarCollapsed = true;
+      sidebar.classList.add('collapsed');
+      if (spacer) spacer.classList.add('collapsed');
+    }
+  }
+})();
 
 // inject hamburger buttons into all topbars
 injectHamburgers();
