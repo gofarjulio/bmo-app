@@ -1096,6 +1096,10 @@
           <div class="topbar-sub">Production Capacity Standard</div>
         </div>
         <div class="topbar-actions">
+          <button class="btn btn-ghost" id="btn-export-pcs" onclick="exportDbPCS()" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Excel
+          </button>
           <button class="btn btn-primary" onclick="document.getElementById('file-db-pcs').click()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             Upload PCS Excel
@@ -1276,6 +1280,10 @@
           <div class="topbar-sub">Semua data order tersimpan</div>
         </div>
         <div class="topbar-actions">
+          <button class="btn btn-ghost" id="btn-export-order" onclick="exportOrderList()" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download Excel
+          </button>
           <select class="form-control" id="filter-order-period" onchange="renderOrderList()" style="min-width:160px">
             <option value="">-- Semua Periode --</option>
           </select>
@@ -2058,8 +2066,14 @@ function renderDbPCS() {
   document.getElementById('db-pcs-count').textContent = `${data.length} records`;
   const empty = document.getElementById('db-pcs-empty');
   const wrap = document.getElementById('db-pcs-table-wrap');
-  if (!data.length) { empty.style.display=''; wrap.style.display='none'; return; }
+  const exportBtn = document.getElementById('btn-export-pcs');
+  if (!data.length) {
+    empty.style.display=''; wrap.style.display='none';
+    if (exportBtn) exportBtn.style.display = 'none';
+    return;
+  }
   empty.style.display='none'; wrap.style.display='';
+  if (exportBtn) exportBtn.style.display = '';
 
   // populate all filter dropdowns with unique values
   const popSel = (id, vals) => {
@@ -2283,8 +2297,15 @@ function renderOrderList() {
   const empty = document.getElementById('order-list-empty');
   const content = document.getElementById('order-list-content');
 
-  if (!keys.length) { empty.style.display=''; content.style.display='none'; return; }
+  if (!keys.length) {
+    empty.style.display=''; content.style.display='none';
+    const btn = document.getElementById('btn-export-order');
+    if (btn) btn.style.display = 'none';
+    return;
+  }
   empty.style.display='none'; content.style.display='';
+  const exportOrderBtn = document.getElementById('btn-export-order');
+  if (exportOrderBtn) exportOrderBtn.style.display = '';
 
   const selectedPeriod = filterEl.value;
   let allOrders = [];
@@ -2898,6 +2919,101 @@ function calculateMP() {
       </tr>
     `;
   }).join('');
+}
+
+// ============================================================
+// EXPORT / DOWNLOAD
+// ============================================================
+function exportDbPCS() {
+  const data = state.dbPCS;
+  if (!data.length) { toast('Tidak ada data PCS untuk didownload', 'warning'); return; }
+
+  // Gunakan data yang sedang difilter jika ada
+  const filtered = (window._dbPCSData && window._dbPCSData.length) ? window._dbPCSData : data;
+
+  const headers = [
+    'No', 'MODEL (Technology)', 'GROUP', 'BATTERY TYPE', 'PLATE', 'SEPARATOR', 'SPACER',
+    'LINE (1st)', 'CT/s (1st)', 'BATT/H (1st)', 'S1 Cap (1st)', 'S2 Cap (1st)', 'S3 Cap (1st)', 'Total Cap (1st)',
+    'LINE (2nd)', 'CT/s (2nd)', 'BATT/H (2nd)', 'S1 Cap (2nd)', 'S2 Cap (2nd)', 'S3 Cap (2nd)', 'Total Cap (2nd)',
+  ];
+
+  const rows = filtered.map((d, i) => [
+    i + 1,
+    d.technology, d.group, d.batteryType, d.plate, d.separator, d.spacer || '',
+    d.line1, d.ct1, d.batHr1, d.s1_1, d.s2_1, d.s3_1, d.total1,
+    d.line2 || '', d.ct2 || 0, d.batHr2 || 0, d.s1_2 || 0, d.s2_2 || 0, d.s3_2 || 0, d.total2 || 0,
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [
+    {wch:4},{wch:16},{wch:14},{wch:18},{wch:8},{wch:12},{wch:8},
+    {wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},
+    {wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Database PCS');
+
+  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const isFiltered = filtered.length !== data.length;
+  XLSX.writeFile(wb, `Database_PCS${isFiltered?'_Filtered':''}_${stamp}.xlsx`);
+  toast(`Download berhasil — ${filtered.length} record${isFiltered?' (filtered)':''}`, 'success');
+}
+
+function exportOrderList() {
+  const filterPeriod = document.getElementById('filter-order-period')?.value || '';
+  const keys = Object.keys(state.orders).sort().reverse();
+
+  // Kumpulkan data sesuai filter periode
+  let allOrders = [];
+  if (filterPeriod) {
+    allOrders = (state.orders[filterPeriod] || []).map(o => ({...o, period: filterPeriod}));
+  } else {
+    keys.forEach(k => (state.orders[k] || []).forEach(o => allOrders.push({...o, period: k})));
+  }
+
+  // Gunakan data yang sedang difilter di tabel jika ada
+  const filtered = (window._currentOrderData && window._currentOrderData.length)
+    ? window._currentOrderData
+    : allOrders.map(o => ({...o, lineAssigned: getLineForItem(o.item), specs: parseItemSpecs(o.item)}));
+
+  if (!filtered.length) { toast('Tidak ada data order untuk didownload', 'warning'); return; }
+
+  const headers = [
+    'No', 'PN Infor (ITEM)', 'PN Customer', 'Customer (Sold To)', 'No PO',
+    'LINE', 'QTY', 'Type', 'RFQ', 'Periode',
+    'Technology', 'Plate', 'Separator',
+  ];
+
+  const rows = filtered.map((o, i) => [
+    i + 1,
+    o.item,
+    o.pn_customer || '',
+    o.customer,
+    o.no_po || '',
+    o.lineAssigned || 'Unmapped',
+    o.qty_order,
+    o.type || '',
+    o.rfq || '',
+    o.period ? o.period.replace('-', ' ') : '',
+    o.specs?.technology || '',
+    o.specs?.plate || '',
+    o.specs?.separator || '',
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [
+    {wch:4},{wch:28},{wch:18},{wch:24},{wch:18},
+    {wch:12},{wch:8},{wch:6},{wch:14},{wch:10},
+    {wch:12},{wch:8},{wch:12},
+  ];
+  XLSX.utils.book_append_sheet(wb, ws, 'Data Order');
+
+  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const periodSuffix = filterPeriod ? `_${filterPeriod}` : '_All';
+  const isFiltered = filtered.length !== allOrders.length;
+  XLSX.writeFile(wb, `Data_Order${periodSuffix}${isFiltered?'_Filtered':''}_${stamp}.xlsx`);
+  toast(`Download berhasil — ${filtered.length} baris`, 'success');
 }
 
 // ============================================================
