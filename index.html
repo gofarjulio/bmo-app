@@ -1081,6 +1081,10 @@
           <div class="topbar-sub">Production Capacity Standard</div>
         </div>
         <div class="topbar-actions">
+          <button class="btn btn-ghost" onclick="exportDbPCS()" id="btn-export-pcs" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span id="btn-export-pcs-label">Download Excel</span>
+          </button>
           <button class="btn btn-primary" onclick="document.getElementById('file-db-pcs').click()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             Upload PCS Excel
@@ -1264,6 +1268,10 @@
           <select class="form-control" id="filter-order-period" onchange="renderOrderList()" style="min-width:160px">
             <option value="">-- Semua Periode --</option>
           </select>
+          <button class="btn btn-ghost" onclick="exportOrderData()" id="btn-export-order" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            <span id="btn-export-order-label">Download Excel</span>
+          </button>
         </div>
       </div>
 
@@ -1861,8 +1869,14 @@ function renderDbLine() {
   const empty = document.getElementById('db-line-empty');
   const wrap = document.getElementById('db-line-table-wrap');
 
-  if (!data.length) { empty.style.display=''; wrap.style.display='none'; return; }
+  const exportBtnPCS = document.getElementById('btn-export-pcs');
+  if (!data.length) {
+    empty.style.display=''; wrap.style.display='none';
+    if (exportBtnPCS) exportBtnPCS.style.display = 'none';
+    return;
+  }
   empty.style.display='none'; wrap.style.display='';
+  if (exportBtnPCS) exportBtnPCS.style.display = '';
 
   // summary badges
   const lines = [...new Set(data.map(d=>d.line))].sort();
@@ -2105,6 +2119,12 @@ function applyPCSFilter() {
   if (resetBtn) resetBtn.style.display = hasFilter ? '' : 'none';
   if (countEl) countEl.textContent = hasFilter ? `${filtered.length} / ${data.length} baris` : '';
 
+  // simpan state filter untuk export
+  window._dbPCSFiltered = filtered;
+  window._dbPCSHasFilter = hasFilter;
+  const exportLbl = document.getElementById('btn-export-pcs-label');
+  if (exportLbl) exportLbl.textContent = hasFilter ? `Download (${filtered.length} baris)` : 'Download Excel';
+
   const tbody = document.getElementById('db-pcs-tbody');
   tbody.innerHTML = filtered.map((d,i) => `
     <tr>
@@ -2269,8 +2289,14 @@ function renderOrderList() {
   const empty = document.getElementById('order-list-empty');
   const content = document.getElementById('order-list-content');
 
-  if (!keys.length) { empty.style.display=''; content.style.display='none'; return; }
+  const exportBtnOrder = document.getElementById('btn-export-order');
+  if (!keys.length) {
+    empty.style.display=''; content.style.display='none';
+    if (exportBtnOrder) exportBtnOrder.style.display = 'none';
+    return;
+  }
   empty.style.display='none'; content.style.display='';
+  if (exportBtnOrder) exportBtnOrder.style.display = '';
 
   const selectedPeriod = filterEl.value;
   let allOrders = [];
@@ -2367,6 +2393,12 @@ function applyOrderFilter() {
   const countEl  = document.getElementById('order-filtered-count');
   if (resetBtn) resetBtn.style.display = hasFilter ? '' : 'none';
   if (countEl)  countEl.textContent    = hasFilter ? `${filtered.length} / ${data.length} baris` : '';
+
+  // simpan state filter untuk export
+  window._orderFiltered   = filtered;
+  window._orderHasFilter  = hasFilter;
+  const exportLblOrder = document.getElementById('btn-export-order-label');
+  if (exportLblOrder) exportLblOrder.textContent = hasFilter ? `Download (${filtered.length} baris)` : 'Download Excel';
 
   const tbody = document.getElementById('order-detail-tbody');
   tbody.innerHTML = filtered.slice(0,300).map((o,i) => {
@@ -2948,6 +2980,108 @@ function calculateMP() {
       </tr>
     `;
   }).join('');
+}
+
+// ============================================================
+// EXPORT DB PCS
+// ============================================================
+function exportDbPCS() {
+  const allData = state.dbPCS;
+  if (!allData.length) { toast('Tidak ada data PCS', 'warning'); return; }
+
+  const hasFilter = window._dbPCSHasFilter || false;
+  const data = (hasFilter && window._dbPCSFiltered?.length) ? window._dbPCSFiltered : allData;
+
+  const headers = [
+    'No','Technology','Group','Battery Type','Plate','Separator','Spacer',
+    // 1st LINE
+    'LINE (1st)','CT/s (1st)','Bat/Hr (1st)','S1 (1st)','S2 (1st)','S3 (1st)','Total (1st)',
+    // 2nd LINE
+    'LINE (2nd)','CT/s (2nd)','Bat/Hr (2nd)','S1 (2nd)','S2 (2nd)','S3 (2nd)','Total (2nd)',
+  ];
+
+  const rows = data.map((d, i) => [
+    i + 1,
+    d.technology, d.group, d.batteryType, d.plate, d.separator, d.spacer || '',
+    // 1st LINE
+    d.line1, d.ct1, d.batHr1, d.s1_1, d.s2_1, d.s3_1, d.total1,
+    // 2nd LINE — kosong jika tidak ada
+    d.line2 || '', d.ct2 > 0 ? d.ct2 : '', d.ct2 > 0 ? d.batHr2 : '',
+    d.ct2 > 0 ? d.s1_2 : '', d.ct2 > 0 ? d.s2_2 : '',
+    d.ct2 > 0 ? d.s3_2 : '', d.ct2 > 0 ? d.total2 : '',
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [
+    {wch:4},{wch:14},{wch:12},{wch:14},{wch:8},{wch:14},{wch:10},
+    {wch:10},{wch:8},{wch:10},{wch:8},{wch:8},{wch:8},{wch:10},
+    {wch:10},{wch:8},{wch:10},{wch:8},{wch:8},{wch:8},{wch:10},
+  ];
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  XLSX.utils.book_append_sheet(wb, ws, 'Database PCS');
+
+  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const filename = `Database_PCS${hasFilter ? '_Filtered' : ''}_${stamp}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  toast(`Download berhasil — ${data.length} record${hasFilter ? ` (dari ${allData.length} total)` : ''}`, 'success');
+}
+
+// ============================================================
+// EXPORT DATA ORDER
+// ============================================================
+function exportOrderData() {
+  const allData = window._currentOrderData || [];
+  if (!allData.length) { toast('Tidak ada data order', 'warning'); return; }
+
+  const hasFilter = window._orderHasFilter || false;
+  const data = (hasFilter && window._orderFiltered?.length) ? window._orderFiltered : allData;
+
+  const period = document.getElementById('filter-order-period')?.value || '';
+
+  const headers = [
+    'No','Periode','PN Infor (ITEM)','PN Customer','Customer (Sold To)','No PO',
+    'Battery Type','Technology','Plate','Separator',
+    '1st LINE','2nd LINE','QTY Order','Type',
+    'RFQ','SO','Ship To'
+  ];
+
+  const rows = data.map((o, i) => [
+    i + 1,
+    o.period ? periodLabel(o.period) : '',
+    o.item,
+    o.pn_customer || '',
+    o.customer,
+    o.no_po || '',
+    o.specs?.batteryType || '',
+    o.specs?.technology || '',
+    o.specs?.plate || '',
+    o.specs?.separator || '',
+    o.lineAssigned || 'Unmapped',
+    o.lineSecond || '',
+    o.qty_order,
+    o.type || '',
+    o.rfq || '',
+    o.so || '',
+    o.ship_to || '',
+  ]);
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+  ws['!cols'] = [
+    {wch:4},{wch:10},{wch:30},{wch:18},{wch:22},{wch:14},
+    {wch:12},{wch:14},{wch:8},{wch:14},
+    {wch:10},{wch:10},{wch:10},{wch:8},
+    {wch:10},{wch:12},{wch:18},
+  ];
+  ws['!freeze'] = { xSplit: 0, ySplit: 1 };
+  XLSX.utils.book_append_sheet(wb, ws, 'Data Order');
+
+  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  const periodStr = period ? `_${period}` : '';
+  const filename = `Data_Order${periodStr}${hasFilter ? '_Filtered' : ''}_${stamp}.xlsx`;
+  XLSX.writeFile(wb, filename);
+  toast(`Download berhasil — ${data.length} order${hasFilter ? ` (dari ${allData.length} total)` : ''}`, 'success');
 }
 
 // ============================================================
