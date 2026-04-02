@@ -102,10 +102,7 @@
   }
 
   /* Section labels hide on collapse */
-  .sidebar.collapsed .nav-section-label {
-    opacity: 0; pointer-events: none;
-    height: 0; padding: 0; margin: 0; overflow: hidden;
-  }
+  .sidebar.collapsed .nav-section-label { opacity: 0; pointer-events: none; }
 
   /* Logo area — toggle btn lives here on the right */
   .sidebar-logo {
@@ -114,16 +111,12 @@
     display: flex; align-items: center; justify-content: space-between;
     gap: 6px; min-height: 52px; flex-shrink: 0;
   }
-  /* collapsed: center logo icon + toggle in a row, same height as expanded */
+  /* collapsed: center everything vertically */
   .sidebar.collapsed .sidebar-logo {
-    padding: 0 0;
+    padding: 12px 0;
     justify-content: center;
     flex-direction: column;
-    gap: 6px;
-    align-items: center;
-  }
-  .sidebar.collapsed .logo-inner {
-    flex: 0; justify-content: center;
+    gap: 4px;
   }
   .logo-inner { display: flex; align-items: center; gap: 10px; flex: 1; overflow: hidden; min-width: 0; }
   .logo-icon-wrap {
@@ -184,13 +177,12 @@
 
   /* NAV */
   .sidebar-nav { padding: 8px 6px; flex: 1; overflow-y: auto; overflow-x: hidden; }
-  .sidebar.collapsed .sidebar-nav { padding: 8px 0; }
 
   .nav-section-label {
     font-family: var(--mono); font-size: 9px; color: var(--text3);
     letter-spacing: 2px; text-transform: uppercase;
     padding: 10px 10px 5px; white-space: nowrap;
-    transition: opacity 0.18s ease, height 0.2s ease, padding 0.2s ease;
+    transition: opacity 0.18s ease;
   }
 
   .nav-item {
@@ -210,7 +202,6 @@
 
   .nav-icon { width: 17px; height: 17px; opacity: 0.75; flex-shrink: 0; transition: opacity 0.15s; }
   .nav-item:hover .nav-icon, .nav-item.active .nav-icon { opacity: 1; }
-  .sidebar.collapsed .nav-icon { width: 18px; height: 18px; opacity: 0.85; }
 
   .nav-badge {
     margin-left: auto; background: var(--accent-dim); color: var(--accent);
@@ -219,13 +210,7 @@
   }
 
   /* Tooltip when collapsed */
-  .sidebar.collapsed .nav-item {
-    padding: 9px 0;
-    justify-content: center;
-    border-radius: 0;
-    width: 100%;
-    margin-bottom: 2px;
-  }
+  .sidebar.collapsed .nav-item { padding: 9px 0; justify-content: center; border-radius: 8px; }
   .sidebar.collapsed .nav-item:hover::after {
     content: attr(data-label);
     position: fixed;
@@ -242,7 +227,7 @@
     padding: 10px 16px; border-top: 1px solid var(--border);
     display: flex; align-items: center; flex-shrink: 0;
   }
-  .sidebar.collapsed .sidebar-footer { padding: 10px 0; justify-content: center; width: 100%; }
+  .sidebar.collapsed .sidebar-footer { padding: 10px 0; justify-content: center; }
   .status-dot {
     display: inline-block; width: 7px; height: 7px; border-radius: 50%;
     background: var(--green); margin-right: 8px;
@@ -1096,10 +1081,6 @@
           <div class="topbar-sub">Production Capacity Standard</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn btn-ghost" id="btn-export-pcs" onclick="exportDbPCS()" style="display:none">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Excel
-          </button>
           <button class="btn btn-primary" onclick="document.getElementById('file-db-pcs').click()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
             Upload PCS Excel
@@ -1280,10 +1261,6 @@
           <div class="topbar-sub">Semua data order tersimpan</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn btn-ghost" id="btn-export-order" onclick="exportOrderList()" style="display:none">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-            Download Excel
-          </button>
           <select class="form-control" id="filter-order-period" onchange="renderOrderList()" style="min-width:160px">
             <option value="">-- Semua Periode --</option>
           </select>
@@ -1320,8 +1297,8 @@
                 <thead>
                   <tr>
                     <th>#</th><th>PN Infor (ITEM)</th><th>PN Customer</th><th>Customer (Sold To)</th><th>No PO</th>
-                    <th>LINE</th><th>QTY</th><th>Type</th>
-                    <th>Technology</th><th>Plate</th><th>Separator</th>
+                    <th>Battery Type</th><th>Technology</th><th>Plate</th><th>Separator</th>
+                    <th>1st LINE</th><th>2nd LINE</th><th>QTY</th><th>Type</th>
                   </tr>
                   <tr class="filter-row">
                     <th></th>
@@ -1329,11 +1306,12 @@
                     <th></th>
                     <th><select class="col-filter" id="fo-customer" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
                     <th></th>
-                    <th><select class="col-filter" id="fo-line" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
-                    <th></th><th></th>
+                    <th><select class="col-filter" id="fo-batttype" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
                     <th><select class="col-filter" id="fo-tech" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
                     <th><select class="col-filter" id="fo-plate" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
                     <th><select class="col-filter" id="fo-sep" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
+                    <th><select class="col-filter" id="fo-line" onchange="applyOrderFilter()"><option value="">Semua</option></select></th>
+                    <th></th><th></th><th></th>
                   </tr>
                 </thead>
                 <tbody id="order-detail-tbody"></tbody>
@@ -2066,14 +2044,8 @@ function renderDbPCS() {
   document.getElementById('db-pcs-count').textContent = `${data.length} records`;
   const empty = document.getElementById('db-pcs-empty');
   const wrap = document.getElementById('db-pcs-table-wrap');
-  const exportBtn = document.getElementById('btn-export-pcs');
-  if (!data.length) {
-    empty.style.display=''; wrap.style.display='none';
-    if (exportBtn) exportBtn.style.display = 'none';
-    return;
-  }
+  if (!data.length) { empty.style.display=''; wrap.style.display='none'; return; }
   empty.style.display='none'; wrap.style.display='';
-  if (exportBtn) exportBtn.style.display = '';
 
   // populate all filter dropdowns with unique values
   const popSel = (id, vals) => {
@@ -2297,15 +2269,8 @@ function renderOrderList() {
   const empty = document.getElementById('order-list-empty');
   const content = document.getElementById('order-list-content');
 
-  if (!keys.length) {
-    empty.style.display=''; content.style.display='none';
-    const btn = document.getElementById('btn-export-order');
-    if (btn) btn.style.display = 'none';
-    return;
-  }
+  if (!keys.length) { empty.style.display=''; content.style.display='none'; return; }
   empty.style.display='none'; content.style.display='';
-  const exportOrderBtn = document.getElementById('btn-export-order');
-  if (exportOrderBtn) exportOrderBtn.style.display = '';
 
   const selectedPeriod = filterEl.value;
   let allOrders = [];
@@ -2317,12 +2282,16 @@ function renderOrderList() {
     });
   }
 
-  // enrich with LINE and specs
-  const enriched = allOrders.map(o => ({
-    ...o,
-    lineAssigned: getLineForItem(o.item),
-    specs: parseItemSpecs(o.item),
-  }));
+  // enrich with LINE, second line, and specs
+  const enriched = allOrders.map(o => {
+    const specs = parseItemSpecs(o.item);
+    return {
+      ...o,
+      lineAssigned:  getLineForItem(o.item),
+      lineSecond:    getSecondLineForItem(o.item),
+      specs,
+    };
+  });
 
   // stats
   const statsEl = document.getElementById('order-stats');
@@ -2349,11 +2318,12 @@ function renderOrderList() {
       [...new Set(vals.filter(Boolean).map(String))].sort()
         .map(v=>`<option value="${v}" ${v===cur?'selected':''}>${v}</option>`).join('');
   };
-  popSel('fo-customer', enriched.map(o=>o.customer));
-  popSel('fo-line', enriched.map(o=>o.lineAssigned||'Unmapped'));
-  popSel('fo-tech', enriched.map(o=>o.specs.technology).filter(Boolean));
-  popSel('fo-plate', enriched.map(o=>o.specs.plate).filter(Boolean));
-  popSel('fo-sep', enriched.map(o=>o.specs.separator).filter(Boolean));
+  popSel('fo-customer',  enriched.map(o=>o.customer));
+  popSel('fo-line',      enriched.map(o=>o.lineAssigned||'Unmapped'));
+  popSel('fo-tech',      enriched.map(o=>o.specs.technology).filter(Boolean));
+  popSel('fo-plate',     enriched.map(o=>o.specs.plate).filter(Boolean));
+  popSel('fo-sep',       enriched.map(o=>o.specs.separator).filter(Boolean));
+  popSel('fo-batttype',  enriched.map(o=>o.specs.batteryType).filter(Boolean));
 
   applyOrderFilter();
 }
@@ -2366,60 +2336,74 @@ function applyOrderFilter() {
   const techF    = document.getElementById('fo-tech')?.value || '';
   const plateF   = document.getElementById('fo-plate')?.value || '';
   const sepF     = document.getElementById('fo-sep')?.value || '';
+  const btF      = document.getElementById('fo-batttype')?.value || '';
   const searchQ  = (document.getElementById('search-order')?.value || '').toLowerCase();
 
-  const hasFilter = !!(itemF || custF || lineF || techF || plateF || sepF || searchQ);
+  const hasFilter = !!(itemF || custF || lineF || techF || plateF || sepF || btF || searchQ);
 
   // active indicators
-  ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep'].forEach(id => {
+  ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.toggle('has-filter', !!el.value);
   });
 
   const filtered = data.filter(o => {
-    if (itemF && !o.item.toLowerCase().includes(itemF)) return false;
+    if (itemF   && !o.item.toLowerCase().includes(itemF)) return false;
     if (searchQ && !o.item.toLowerCase().includes(searchQ) && !o.customer.toLowerCase().includes(searchQ)) return false;
-    if (custF && o.customer !== custF) return false;
+    if (custF   && o.customer !== custF) return false;
     if (lineF) {
       const assigned = o.lineAssigned || 'Unmapped';
       if (assigned !== lineF) return false;
     }
+    if (btF   && o.specs.batteryType !== btF) return false;
     if (techF && o.specs.technology !== techF) return false;
     if (plateF && String(o.specs.plate) !== plateF) return false;
-    if (sepF && o.specs.separator !== sepF) return false;
+    if (sepF  && o.specs.separator !== sepF) return false;
     return true;
   });
 
   // show/hide reset button and count
   const resetBtn = document.getElementById('btn-reset-order');
-  const countEl = document.getElementById('order-filtered-count');
+  const countEl  = document.getElementById('order-filtered-count');
   if (resetBtn) resetBtn.style.display = hasFilter ? '' : 'none';
-  if (countEl) countEl.textContent = hasFilter ? `${filtered.length} / ${data.length} baris` : '';
+  if (countEl)  countEl.textContent    = hasFilter ? `${filtered.length} / ${data.length} baris` : '';
 
   const tbody = document.getElementById('order-detail-tbody');
-  tbody.innerHTML = filtered.slice(0,300).map((o,i)=>`
-    <tr>
-      <td class="td-mono">${i+1}</td>
-      <td class="td-mono" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.item}">${o.item}</td>
-      <td class="td-mono" style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.pn_customer||''}">${o.pn_customer||'-'}</td>
-      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.customer}">${o.customer}</td>
-      <td class="td-mono" style="font-size:10px;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.no_po||''}">${o.no_po||'-'}</td>
-      <td>${o.lineAssigned ? `<span class="badge badge-blue">${o.lineAssigned}</span>` : '<span class="badge badge-red">Unmapped</span>'}</td>
-      <td class="td-mono td-bold">${o.qty_order.toLocaleString()}</td>
-      <td><span class="badge ${o.type==='W'?'badge-blue':o.type==='D'?'badge-yellow':o.type==='P'?'badge-green':'badge-orange'}">${o.type||'-'}</span></td>
-      <td>${o.specs.technology ? `<span class="badge badge-blue">${o.specs.technology}</span>` : '-'}</td>
-      <td class="td-mono">${o.specs.plate || '-'}</td>
-      <td>${o.specs.separator || '-'}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:20px">Tidak ada data yang sesuai filter</td></tr>`;
+  tbody.innerHTML = filtered.slice(0,300).map((o,i) => {
+    const line1Badge = o.lineAssigned
+      ? `<span class="badge badge-blue">${o.lineAssigned}</span>`
+      : '<span class="badge badge-red">Unmapped</span>';
+    const line2Badge = o.lineSecond
+      ? `<span class="badge badge-yellow">${o.lineSecond}</span>`
+      : '<span style="color:var(--text3);font-size:11px">-</span>';
+    const typeBadge = o.type
+      ? `<span class="badge ${o.type==='W'?'badge-blue':o.type==='D'?'badge-yellow':o.type==='P'?'badge-green':'badge-orange'}">${o.type}</span>`
+      : '-';
+    return `
+      <tr>
+        <td class="td-mono">${i+1}</td>
+        <td class="td-mono" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.item}">${o.item}</td>
+        <td class="td-mono" style="font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.pn_customer||''}">${o.pn_customer||'-'}</td>
+        <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${o.customer}">${o.customer}</td>
+        <td class="td-mono" style="font-size:10px">${o.no_po||'-'}</td>
+        <td class="td-mono td-bold">${o.specs.batteryType||'-'}</td>
+        <td>${o.specs.technology ? `<span class="badge badge-blue">${o.specs.technology}</span>` : '-'}</td>
+        <td class="td-mono">${o.specs.plate||'-'}</td>
+        <td style="font-size:11px">${o.specs.separator||'-'}</td>
+        <td>${line1Badge}</td>
+        <td>${line2Badge}</td>
+        <td class="td-mono td-bold">${o.qty_order.toLocaleString()}</td>
+        <td>${typeBadge}</td>
+      </tr>`;
+  }).join('') || `<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:20px">Tidak ada data yang sesuai filter</td></tr>`;
 
   if (filtered.length > 300) {
-    tbody.innerHTML += `<tr><td colspan="11" style="text-align:center;color:var(--text3);padding:12px">Menampilkan 300 dari ${filtered.length} item. Gunakan filter untuk mempersempit.</td></tr>`;
+    tbody.innerHTML += `<tr><td colspan="13" style="text-align:center;color:var(--text3);padding:12px">Menampilkan 300 dari ${filtered.length} item. Gunakan filter untuk mempersempit.</td></tr>`;
   }
 }
 
 function resetOrderFilter() {
-  ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep'].forEach(id => {
+  ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
@@ -2446,104 +2430,144 @@ function deleteCurrentPeriod() {
 // ============================================================
 // ITEM PARSING
 // ============================================================
-function getLineForItem(item) {
-  if (!item) return null;
-  const parts = item.split('-');
-  // build prefix dari bagian awal item (ambil 4 segmen awal)
-  for (const entry of state.dbLine) {
-    // match if item starts with the prefix
-    if (item.toUpperCase().startsWith(entry.prefix.toUpperCase())) {
-      return entry.line;
-    }
-    // also try: item contains the prefix in the 3rd segment
-    if (parts[2] && parts[2].toUpperCase().startsWith(entry.prefix.split('-').slice(-1)[0].toUpperCase())) {
-      // check broader match
-    }
-    // exact check: join first N parts of item
-    const prefParts = entry.prefix.split('-');
-    const itemParts = item.split('-');
-    if (prefParts.every((p, idx) => (itemParts[idx]||'').toUpperCase() === p.toUpperCase())) {
-      return entry.line;
-    }
-  }
-  return null;
-}
+// ============================================================
+// ITEM PARSING — metode baru berdasarkan posisi digit
+// Contoh PN: "F-ACDP-75D31RX-B4C3-IS-00A0"
+//  digit ke-4  (index 3)     = Technology code  → 'C','H','M','V'
+//  digit ke-6  (index 5)     = Separator code   → 'P','F','L','A','G','R'
+//  digit ke-8 s/d 14 (idx 7-13) = Battery Type block (termasuk 'X') → hilangkan 'X' di akhir
+//  digit ke-16 s/d 17 (idx 15-16) = Plate code → huruf puluhan + angka satuan
+// ============================================================
 
 function parseItemSpecs(item) {
-  // item format: F-ACDP-48D26RX-A9C3-IN-XPE0
-  // char index (0-based): pos 4 = technology indicator (char ke-5 satu-kesatu)
   if (!item) return {};
   try {
-    const flat = item.replace(/-/g,''); // FACDP48D26RXA9C3INXPE0
-    // separator: char ke-5 dari item (index 4)
-    const sep5 = item[4] || '';
-    const separator = sep5 === 'D' ? 'Darak' : sep5 === 'P' ? 'PE' : sep5;
+    // ── Technology: digit ke-4 (0-based index 3) ──
+    const techCode = item[3] || '';
+    const technology = techCode === 'C' ? 'Conventional' :
+                       techCode === 'H' ? 'Hybrid' :
+                       (techCode === 'M' || techCode === 'V') ? 'Maintenance Free' : techCode;
 
-    // technology: char ke-4 (index 3)
-    const tech4 = item[3] || '';
-    const technology = tech4 === 'C' ? 'Conventional' :
-                       tech4 === 'H' ? 'Hybrid' :
-                       (tech4 === 'M' || tech4 === 'V') ? 'Maintenance Free' : tech4;
+    // ── Separator: digit ke-6 (0-based index 5) ──
+    const sepCode = item[5] || '';
+    const separator = sepCode === 'P' ? 'PE' :
+                      sepCode === 'F' ? 'Phenolyc Resin' :
+                      sepCode === 'L' ? 'Linter PULP' :
+                      sepCode === 'A' ? 'AGM' :
+                      sepCode === 'G' ? 'Glassmat' :
+                      sepCode === 'R' ? 'Rubber' : sepCode;
 
-    // part3 = kata ke-3 (index 2): "48D26RX"
+    // ── Battery Type: digit ke-8 s/d 14 (index 7-13), hilangkan 'X' di akhir ──
+    // Contoh: "F-ACDP-75D31RX-..." → index 7..13 = "75D31RX" → hapus X → "75D31R"
+    const rawType = item.slice(7, 14).trim();                         // "75D31RX" (7 char)
+    const batteryType = rawType.replace(/X$/i, '');                   // "75D31R"
+
+    // ── Plate: digit ke-16 s/d 17 (index 15-16) ──
+    // Huruf pertama = puluhan (A=0, B=1, C=2, ...)
+    // Karakter kedua = satuan (angka langsung)
+    const plateChar1 = item[15] || '';
+    const plateChar2 = item[16] || '';
+    const plateTens = isNaN(parseInt(plateChar1))
+      ? (plateChar1.toUpperCase().charCodeAt(0) - 65)   // A=0, B=1, C=2, ...
+      : parseInt(plateChar1);
+    const plateOnes = parseInt(plateChar2) || 0;
+    const plate = String(plateTens * 10 + plateOnes).padStart(2, '0'); // "14", "09", "27"
+
+    // ── Group (tetap dipertahankan untuk kompatibilitas) ──
     const parts = item.split('-');
     const part3 = parts[2] || '';
-    // group
     let group = '';
     if (part3.includes('D26')) group = 'N50';
     else if (part3.includes('D31')) group = 'N70';
     else if (part3.includes('D23')) group = 'NS40';
     else if (part3.includes('D20')) group = 'N40';
-    else group = part3;
+    else if (part3.includes('D19')) group = 'N40';
+    else group = batteryType;
 
-    // type = part3 minus trailing X
-    const type = part3.endsWith('X') ? part3.slice(0,-1) : part3;
-
-    // plate: char 16-17 dari item (0-based = 15,16)
-    const ch16 = item[15] || '';
-    const ch17 = item[16] || '';
-    const letterToDigit = (c) => {
-      if (!isNaN(c)) return c;
-      return String(c.toUpperCase().charCodeAt(0) - 65);
-    };
-    const plate = `${letterToDigit(ch16)}${ch17}`;
-
-    return { technology, group, type, separator, plate };
+    return { technology, separator, batteryType, plate, group, techCode, sepCode };
   } catch(e) {
     return {};
   }
 }
 
-function getPCSForItem(item) {
-  if (!state.dbPCS.length) return null;
+// ── Cari PCS record berdasarkan batteryType + technology + plate + separator ──
+function findPCSRecord(item) {
+  if (!state.dbPCS.length || !item) return null;
   const specs = parseItemSpecs(item);
-  // Cari record PCS yang cocok berdasarkan group, plate, separator
-  const match = state.dbPCS.find(p => {
-    const groupMatch = !p.group || p.group === specs.group || p.batteryType === specs.group;
-    const plateMatch = !p.plate || String(p.plate) === String(specs.plate);
-    const sepMatch = !p.separator || p.separator === specs.separator;
-    return groupMatch && plateMatch && sepMatch;
+  if (!specs.batteryType) return null;
+
+  // Cari match: batteryType (wajib) + technology + plate + separator
+  // Coba match lengkap dulu, lalu turunkan kriteria jika tidak ketemu
+  const candidates = state.dbPCS.filter(p => {
+    // batteryType harus match (kolom batteryType di PCS)
+    const btMatch = p.batteryType && p.batteryType.trim().toUpperCase() === specs.batteryType.toUpperCase();
+    return btMatch;
   });
-  if (!match) return null;
-  return match;
+
+  if (!candidates.length) return null;
+
+  // Dari kandidat, prioritaskan yang paling spesifik (semua 4 kriteria cocok)
+  const fullMatch = candidates.find(p =>
+    (!p.technology || p.technology === specs.technology) &&
+    (!p.plate      || String(p.plate).padStart(2,'0') === specs.plate) &&
+    (!p.separator  || p.separator === specs.separator)
+  );
+  if (fullMatch) return fullMatch;
+
+  // Fallback: batteryType + technology + plate
+  const noSepMatch = candidates.find(p =>
+    (!p.technology || p.technology === specs.technology) &&
+    (!p.plate      || String(p.plate).padStart(2,'0') === specs.plate)
+  );
+  if (noSepMatch) return noSepMatch;
+
+  // Fallback: batteryType + technology saja
+  const techOnly = candidates.find(p =>
+    (!p.technology || p.technology === specs.technology)
+  );
+  if (techOnly) return techOnly;
+
+  // Fallback: batteryType saja (kandidat pertama)
+  return candidates[0];
 }
 
-// Ambil CT yang sesuai berdasarkan LINE yang ditentukan dari DB LINE
+// ── Dapatkan LINE untuk item: gunakan line1 (first line) dari PCS ──
+function getLineForItem(item) {
+  if (!item) return null;
+  const pcs = findPCSRecord(item);
+  if (!pcs) return null;
+  return pcs.line1 || null;
+}
+
+// ── Dapatkan LINE kedua (second line) dari PCS ──
+function getSecondLineForItem(item) {
+  if (!item) return null;
+  const pcs = findPCSRecord(item);
+  if (!pcs || !pcs.line2) return null;
+  return pcs.line2;
+}
+
+// ── getPCSForItem: alias ke findPCSRecord untuk kompatibilitas ──
+function getPCSForItem(item) {
+  return findPCSRecord(item);
+}
+
+// ── Ambil CT berdasarkan LINE target (1st atau 2nd) ──
 function getCTForItemOnLine(item, targetLine) {
-  if (!state.dbPCS.length) return null;
-  const specs = parseItemSpecs(item);
-  const match = state.dbPCS.find(p => {
-    const groupMatch = !p.group || p.group === specs.group || p.batteryType === specs.group;
-    const plateMatch = !p.plate || String(p.plate) === String(specs.plate);
-    const sepMatch = !p.separator || p.separator === specs.separator;
-    return groupMatch && plateMatch && sepMatch;
-  });
-  if (!match) return null;
-  // return CT sesuai LINE (1st atau 2nd)
-  if (String(match.line1) === String(targetLine)) return { ct: match.ct1, batHr: match.batHr1, s1: match.s1_1, s2: match.s2_1, s3: match.s3_1, total: match.total1, bottleneck: match.bottleneck1 };
-  if (String(match.line2) === String(targetLine)) return { ct: match.ct2, batHr: match.batHr2, s1: match.s1_2, s2: match.s2_2, s3: match.s3_2, total: match.total2, bottleneck: match.bottleneck2 };
-  // fallback: return 1st LINE data jika line tidak cocok
-  return { ct: match.ct1, batHr: match.batHr1, s1: match.s1_1, s2: match.s2_1, s3: match.s3_1, total: match.total1, bottleneck: match.bottleneck1 };
+  if (!state.dbPCS.length || !item) return null;
+  const pcs = findPCSRecord(item);
+  if (!pcs) return null;
+
+  const t = String(targetLine).trim();
+
+  if (String(pcs.line1).trim() === t) {
+    return { ct: pcs.ct1, batHr: pcs.batHr1, s1: pcs.s1_1, s2: pcs.s2_1, s3: pcs.s3_1, total: pcs.total1, bottleneck: pcs.bottleneck1 };
+  }
+  if (pcs.line2 && String(pcs.line2).trim() === t) {
+    return { ct: pcs.ct2, batHr: pcs.batHr2, s1: pcs.s1_2, s2: pcs.s2_2, s3: pcs.s3_2, total: pcs.total2, bottleneck: pcs.bottleneck2 };
+  }
+  // Fallback: gunakan line1 jika line tidak ditemukan
+  return { ct: pcs.ct1, batHr: pcs.batHr1, s1: pcs.s1_1, s2: pcs.s2_1, s3: pcs.s3_1, total: pcs.total1, bottleneck: pcs.bottleneck1 };
 }
 
 // ============================================================
@@ -2670,8 +2694,13 @@ function calculateLVC() {
   });
 
   // calculate processing time per line
+  // Ambil semua LINE unik dari DB PCS (line1) sebagai referensi
+  const allLines = [...new Set([
+    ...state.dbPCS.map(p=>p.line1).filter(Boolean),
+    ...state.dbPCS.map(p=>p.line2).filter(Boolean),
+  ])].sort();
+
   const lvcData = [];
-  const allLines = [...new Set(state.dbLine.map(d=>d.line))].sort();
 
   allLines.forEach(line => {
     const lineOrders = lineGroups[line] || [];
@@ -2919,101 +2948,6 @@ function calculateMP() {
       </tr>
     `;
   }).join('');
-}
-
-// ============================================================
-// EXPORT / DOWNLOAD
-// ============================================================
-function exportDbPCS() {
-  const data = state.dbPCS;
-  if (!data.length) { toast('Tidak ada data PCS untuk didownload', 'warning'); return; }
-
-  // Gunakan data yang sedang difilter jika ada
-  const filtered = (window._dbPCSData && window._dbPCSData.length) ? window._dbPCSData : data;
-
-  const headers = [
-    'No', 'MODEL (Technology)', 'GROUP', 'BATTERY TYPE', 'PLATE', 'SEPARATOR', 'SPACER',
-    'LINE (1st)', 'CT/s (1st)', 'BATT/H (1st)', 'S1 Cap (1st)', 'S2 Cap (1st)', 'S3 Cap (1st)', 'Total Cap (1st)',
-    'LINE (2nd)', 'CT/s (2nd)', 'BATT/H (2nd)', 'S1 Cap (2nd)', 'S2 Cap (2nd)', 'S3 Cap (2nd)', 'Total Cap (2nd)',
-  ];
-
-  const rows = filtered.map((d, i) => [
-    i + 1,
-    d.technology, d.group, d.batteryType, d.plate, d.separator, d.spacer || '',
-    d.line1, d.ct1, d.batHr1, d.s1_1, d.s2_1, d.s3_1, d.total1,
-    d.line2 || '', d.ct2 || 0, d.batHr2 || 0, d.s1_2 || 0, d.s2_2 || 0, d.s3_2 || 0, d.total2 || 0,
-  ]);
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = [
-    {wch:4},{wch:16},{wch:14},{wch:18},{wch:8},{wch:12},{wch:8},
-    {wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},
-    {wch:12},{wch:8},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},
-  ];
-  XLSX.utils.book_append_sheet(wb, ws, 'Database PCS');
-
-  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  const isFiltered = filtered.length !== data.length;
-  XLSX.writeFile(wb, `Database_PCS${isFiltered?'_Filtered':''}_${stamp}.xlsx`);
-  toast(`Download berhasil — ${filtered.length} record${isFiltered?' (filtered)':''}`, 'success');
-}
-
-function exportOrderList() {
-  const filterPeriod = document.getElementById('filter-order-period')?.value || '';
-  const keys = Object.keys(state.orders).sort().reverse();
-
-  // Kumpulkan data sesuai filter periode
-  let allOrders = [];
-  if (filterPeriod) {
-    allOrders = (state.orders[filterPeriod] || []).map(o => ({...o, period: filterPeriod}));
-  } else {
-    keys.forEach(k => (state.orders[k] || []).forEach(o => allOrders.push({...o, period: k})));
-  }
-
-  // Gunakan data yang sedang difilter di tabel jika ada
-  const filtered = (window._currentOrderData && window._currentOrderData.length)
-    ? window._currentOrderData
-    : allOrders.map(o => ({...o, lineAssigned: getLineForItem(o.item), specs: parseItemSpecs(o.item)}));
-
-  if (!filtered.length) { toast('Tidak ada data order untuk didownload', 'warning'); return; }
-
-  const headers = [
-    'No', 'PN Infor (ITEM)', 'PN Customer', 'Customer (Sold To)', 'No PO',
-    'LINE', 'QTY', 'Type', 'RFQ', 'Periode',
-    'Technology', 'Plate', 'Separator',
-  ];
-
-  const rows = filtered.map((o, i) => [
-    i + 1,
-    o.item,
-    o.pn_customer || '',
-    o.customer,
-    o.no_po || '',
-    o.lineAssigned || 'Unmapped',
-    o.qty_order,
-    o.type || '',
-    o.rfq || '',
-    o.period ? o.period.replace('-', ' ') : '',
-    o.specs?.technology || '',
-    o.specs?.plate || '',
-    o.specs?.separator || '',
-  ]);
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-  ws['!cols'] = [
-    {wch:4},{wch:28},{wch:18},{wch:24},{wch:18},
-    {wch:12},{wch:8},{wch:6},{wch:14},{wch:10},
-    {wch:12},{wch:8},{wch:12},
-  ];
-  XLSX.utils.book_append_sheet(wb, ws, 'Data Order');
-
-  const stamp = new Date().toISOString().slice(0,10).replace(/-/g,'');
-  const periodSuffix = filterPeriod ? `_${filterPeriod}` : '_All';
-  const isFiltered = filtered.length !== allOrders.length;
-  XLSX.writeFile(wb, `Data_Order${periodSuffix}${isFiltered?'_Filtered':''}_${stamp}.xlsx`);
-  toast(`Download berhasil — ${filtered.length} baris`, 'success');
 }
 
 // ============================================================
