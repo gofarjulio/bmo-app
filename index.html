@@ -2759,8 +2759,14 @@ function calculateLVC() {
     const loadingPct = capacityHours > 0 ? (processingHours / capacityHours * 100) : 0;
     const totalQty = lineOrders.reduce((s,o)=>s+o.qty_order,0);
 
+    // Kapasitas per shift (dalam jam) untuk reference lines
+    const capS1Hours = cap.s1 ? (435 * cap.workDays / 60) : 0;
+    const capS2Hours = cap.s1 && cap.s2 ? ((435 + 405) * cap.workDays / 60) : capS1Hours;
+    const capS3Hours = (cap.s1 && cap.s2 && cap.s3) ? ((435 + 405 + 370) * cap.workDays / 60) : capS2Hours;
+
     lvcData.push({
       line, totalQty, processingHours, capacityHours, loadingPct,
+      capS1Hours, capS2Hours, capS3Hours,
       cap, shiftActive: [cap.s1?'S1':'', cap.s2?'S2':'', cap.s3?'S3':''].filter(Boolean).join(' + ') || '-'
     });
   });
@@ -2795,26 +2801,167 @@ function calculateLVC() {
     </div>
   `;
 
-  // bars
+  // ── VERTICAL BAR CHART ─────────────────────────────────────
   const barsEl = document.getElementById('lvc-bars');
-  barsEl.innerHTML = lvcData.map(d => {
-    const pct = Math.min(d.loadingPct, 120);
-    const color = d.loadingPct > 100 ? 'var(--red)' :
-                  d.loadingPct > 85 ? 'var(--orange)' :
-                  d.loadingPct > 65 ? 'var(--yellow)' : 'var(--green)';
+
+  // Nilai max Y-axis: ambil dari kapasitas 3 shift tertinggi + 10% ruang atas
+  const maxYVal = Math.max(...lvcData.map(d => Math.max(d.capS3Hours, d.processingHours)), 1) * 1.12;
+
+  // Dimensi SVG (fixed, responsive via viewBox)
+  const svgW    = 700;
+  const svgH    = 380;
+  const padL    = 52;   // kiri: label Y-axis
+  const padR    = 16;   // kanan
+  const padT    = 20;   // atas
+  const padB    = 56;   // bawah: label LINE + loading%
+  const plotW   = svgW - padL - padR;
+  const plotH   = svgH - padT - padB;
+
+  const n       = lvcData.length;
+  const barW    = Math.min(Math.floor(plotW / n * 0.55), 60);
+  const barGapW = plotW / n;
+
+  // Helper — Y pixel dari nilai jam (makin besar = makin ke atas)
+  const yPx  = (h) => padT + plotH - (h / maxYVal) * plotH;
+  const yH   = (h) => (h / maxYVal) * plotH;
+
+  // Warna bar
+  const bColor = (pct) =>
+    pct > 100 ? '#ff5252' : pct > 85 ? '#ff9100' : pct > 65 ? '#ffca28' : '#00e676';
+
+  // Y-axis grid & labels (5 garis)
+  const yTicks = 5;
+  const yGridLines = Array.from({length: yTicks + 1}, (_, i) => {
+    const val = (maxYVal / yTicks) * i;
+    const y   = yPx(val);
     return `
-      <div class="lvc-row">
-        <div class="lvc-label">${d.line}</div>
-        <div class="lvc-bar-wrap">
-          <div class="lvc-bar-fill" style="width:${pct}%;background:${color}">
-            ${pct > 15 ? `<span class="lvc-bar-text">${d.loadingPct.toFixed(1)}%</span>` : ''}
-          </div>
-        </div>
-        <div class="lvc-pct" style="color:${color}">${d.loadingPct.toFixed(1)}%</div>
-        <div class="lvc-detail">${d.totalQty.toLocaleString()} unit / ${d.processingHours.toFixed(1)} jam</div>
-      </div>
+      <line x1="${padL}" y1="${y}" x2="${padL + plotW}" y2="${y}"
+            stroke="#253045" stroke-width="0.5" opacity="0.7"/>
+      <text x="${padL - 6}" y="${y + 4}" text-anchor="end"
+            font-size="9" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${val.toFixed(0)}j</text>`;
+  }).join('');
+
+  // Ref lines: rata-rata kapasitas semua LINE per shift level
+  // Setiap LINE mungkin berbeda, tampilkan ref per LINE bukan global
+  const bars = lvcData.map((d, i) => {
+    const cx     = padL + i * barGapW + barGapW / 2;
+    const bx     = cx - barW / 2;
+    const bH     = yH(d.processingHours);
+    const by     = yPx(d.processingHours);
+    const color  = bColor(d.loadingPct);
+    const pctTxt = d.loadingPct.toFixed(1) + '%';
+
+    // Ref line Y positions untuk LINE ini
+    const yS1 = yPx(d.capS1Hours);
+    const yS2 = yPx(d.capS2Hours);
+    const yS3 = yPx(d.capS3Hours);
+
+    // Loading % label: di atas bar
+    const labelY = by - 5;
+
+    return `
+      <!-- BAR ${d.line} -->
+      <!-- background column (full height subtle) -->
+      <rect x="${bx}" y="${padT}" width="${barW}" height="${plotH}"
+            rx="3" fill="#1a2333" opacity="0.5"/>
+
+      <!-- bar fill -->
+      <rect x="${bx}" y="${by}" width="${barW}" height="${bH}"
+            rx="3" fill="${color}" opacity="0.88">
+        <animate attributeName="height" from="0" to="${bH}" dur="0.5s" fill="freeze"/>
+        <animate attributeName="y" from="${padT + plotH}" to="${by}" dur="0.5s" fill="freeze"/>
+      </rect>
+
+      <!-- loading % di atas bar -->
+      <text x="${cx}" y="${Math.min(labelY, padT + plotH - 4)}"
+            text-anchor="middle" font-size="9.5" font-weight="600"
+            font-family="IBM Plex Mono,monospace" fill="${color}">${pctTxt}</text>
+
+      <!-- ref line S1 (cyan dashed) -->
+      ${d.capS1Hours > 0 ? `
+      <line x1="${bx - 4}" y1="${yS1}" x2="${bx + barW + 4}" y2="${yS1}"
+            stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.9"/>` : ''}
+
+      <!-- ref line S2 (yellow dashed) -->
+      ${d.capS2Hours > d.capS1Hours ? `
+      <line x1="${bx - 4}" y1="${yS2}" x2="${bx + barW + 4}" y2="${yS2}"
+            stroke="#ffca28" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.9"/>` : ''}
+
+      <!-- ref line S3 (green dashed) -->
+      ${d.capS3Hours > d.capS2Hours ? `
+      <line x1="${bx - 4}" y1="${yS3}" x2="${bx + barW + 4}" y2="${yS3}"
+            stroke="#00e676" stroke-width="1.5" stroke-dasharray="4,2" opacity="0.9"/>` : ''}
+
+      <!-- LINE label di bawah -->
+      <text x="${cx}" y="${padT + plotH + 14}" text-anchor="middle"
+            font-size="10" font-family="IBM Plex Mono,monospace" fill="#8a9bb5">${d.line}</text>
+
+      <!-- qty order di bawah LINE label -->
+      <text x="${cx}" y="${padT + plotH + 26}" text-anchor="middle"
+            font-size="8.5" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${d.totalQty.toLocaleString()}</text>
+
+      <!-- processing hours di bawah qty -->
+      <text x="${cx}" y="${padT + plotH + 38}" text-anchor="middle"
+            font-size="8" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${d.processingHours.toFixed(1)}j</text>
     `;
   }).join('');
+
+  // Y-axis label
+  const yAxisLabel = `
+    <text x="14" y="${padT + plotH / 2}" text-anchor="middle"
+          font-size="9" font-family="IBM Plex Mono,monospace" fill="#4a5a72"
+          transform="rotate(-90, 14, ${padT + plotH / 2})">Jam</text>`;
+
+  // X-axis line
+  const xAxis = `<line x1="${padL}" y1="${padT + plotH}" x2="${padL + plotW}" y2="${padT + plotH}"
+                        stroke="#253045" stroke-width="1"/>`;
+  const yAxis = `<line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT + plotH}"
+                        stroke="#253045" stroke-width="1"/>`;
+
+  barsEl.innerHTML = `
+    <!-- LEGEND -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:12px;flex-wrap:wrap;
+                padding:8px 12px;background:var(--surface2);border-radius:6px;font-family:var(--mono)">
+      <span style="font-size:10px;color:var(--text3)">REF LINE:</span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#00d4ff">
+        <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#00d4ff" stroke-width="1.5" stroke-dasharray="4,2"/></svg>
+        Kap. S1
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#ffca28">
+        <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#ffca28" stroke-width="1.5" stroke-dasharray="4,2"/></svg>
+        Kap. S1+S2
+      </span>
+      <span style="display:flex;align-items:center;gap:5px;font-size:10px;color:#00e676">
+        <svg width="22" height="8"><line x1="0" y1="4" x2="22" y2="4" stroke="#00e676" stroke-width="1.5" stroke-dasharray="4,2"/></svg>
+        Kap. S1+S2+S3
+      </span>
+      <span style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:10px">
+        <span style="display:flex;align-items:center;gap:3px;color:#00e676"><span style="width:10px;height:10px;background:#00e676;border-radius:2px;display:inline-block"></span>OK ≤65%</span>
+        <span style="display:flex;align-items:center;gap:3px;color:#ffca28"><span style="width:10px;height:10px;background:#ffca28;border-radius:2px;display:inline-block"></span>65–85%</span>
+        <span style="display:flex;align-items:center;gap:3px;color:#ff9100"><span style="width:10px;height:10px;background:#ff9100;border-radius:2px;display:inline-block"></span>85–100%</span>
+        <span style="display:flex;align-items:center;gap:3px;color:#ff5252"><span style="width:10px;height:10px;background:#ff5252;border-radius:2px;display:inline-block"></span>OVR</span>
+      </span>
+    </div>
+
+    <!-- SVG CHART -->
+    <div style="overflow-x:auto">
+      <svg viewBox="0 0 ${svgW} ${svgH}" width="100%" style="min-width:${Math.max(svgW, n * 70)}px;display:block">
+        ${yGridLines}
+        ${yAxisLabel}
+        ${xAxis}
+        ${yAxis}
+        ${bars}
+      </svg>
+    </div>
+
+    <!-- sub-label row -->
+    <div style="display:flex;justify-content:center;gap:16px;margin-top:4px;
+                font-family:var(--mono);font-size:9px;color:var(--text3)">
+      <span>angka bawah = QTY order (unit)</span>
+      <span>·</span>
+      <span>angka paling bawah = processing time (jam)</span>
+    </div>
+  `;
 
   // detail table
   const tbody = document.getElementById('lvc-detail-tbody');
