@@ -1428,7 +1428,7 @@
                 <thead>
                   <tr>
                     <th>LINE</th><th>Total Order (unit)</th><th>Processing Time (jam)</th>
-                    <th>Kapasitas (jam)</th><th>Loading %</th><th>Status</th>
+                    <th>Kapasitas (jam)</th><th>Takt Time (sec/unit)</th><th>Loading %</th><th>Status</th>
                     <th>Shift Config</th>
                   </tr>
                 </thead>
@@ -2902,7 +2902,7 @@ function calculateLVC() {
 
       <!-- processing hours di bawah qty -->
       <text x="${cx}" y="${padT + plotH + 38}" text-anchor="middle"
-            font-size="8" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${d.processingHours.toFixed(1)}j</text>
+            font-size="8" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${d.totalQty > 0 ? Math.round(d.capacityHours * 3600 / d.totalQty) + 's' : '-'}</text>
     `;
   }).join('');
 
@@ -2959,7 +2959,7 @@ function calculateLVC() {
                 font-family:var(--mono);font-size:9px;color:var(--text3)">
       <span>angka bawah = QTY order (unit)</span>
       <span>·</span>
-      <span>angka paling bawah = processing time (jam)</span>
+      <span>angka paling bawah = Takt Time (sec/unit)</span>
     </div>
   `;
 
@@ -2976,6 +2976,7 @@ function calculateLVC() {
         <td class="td-mono td-bold">${d.totalQty.toLocaleString()}</td>
         <td class="td-mono">${d.processingHours.toFixed(2)}</td>
         <td class="td-mono">${d.capacityHours.toFixed(2)}</td>
+        <td class="td-mono td-bold">${d.totalQty > 0 ? Math.round(d.capacityHours * 3600 / d.totalQty) + ' s/unit' : '-'}</td>
         <td class="td-mono td-bold" style="color:${d.loadingPct>100?'var(--red)':d.loadingPct>85?'var(--orange)':'var(--green)'}">${d.loadingPct.toFixed(1)}%</td>
         <td>${status}</td>
         <td style="font-size:11px;color:var(--text3)">${d.shiftActive} × ${d.cap.workDays} hari</td>
