@@ -815,6 +815,56 @@
     border: 1px solid #9f9f9f; background: #fff; padding: 4px 10px; cursor: pointer;
   }
 
+  /* WORK CALENDAR */
+  .workcal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+  }
+  .workcal-legend {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+  }
+  .workcal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(34px, 1fr));
+    gap: 6px;
+    max-width: 420px;
+  }
+  .workcal-dow {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: center;
+    font-family: var(--mono);
+    padding: 4px 0;
+  }
+  .workcal-cell {
+    height: 34px;
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text2);
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .workcal-cell.off {
+    background: var(--surface);
+    color: var(--text3);
+  }
+  .workcal-cell.on {
+    background: var(--green-dim);
+    color: var(--green);
+    border-color: rgba(0,230,118,0.35);
+  }
+  .workcal-cell.weekend {
+    border-style: dashed;
+  }
+
   /* filter active indicator */
   .col-filter.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim2); }
 
@@ -1432,11 +1482,23 @@
         <div id="cap-content" style="display:none">
           <div class="card">
             <div class="card-header">
+              <div class="card-title"><div class="card-title-dot"></div>Kalender Kerja</div>
+            </div>
+            <div class="workcal-head">
+              <div id="workcal-period-label" class="badge badge-blue">-</div>
+              <div id="workcal-total" class="badge badge-green">Hari ON: 0</div>
+            </div>
+            <div class="workcal-legend">Klik tanggal untuk ON/OFF. Total ON otomatis dipakai sebagai Hari Kerja semua LINE.</div>
+            <div id="workcal-grid" class="workcal-grid" style="margin-top:10px"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
               <div class="card-title"><div class="card-title-dot"></div>Konfigurasi Shift per LINE</div>
             </div>
             <div class="alert alert-warning">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              Hari kerja yang diisi = jumlah hari kerja produksi. Shift diisi 0 = tidak aktif. Jam kerja: Shift 1 = 435 menit, Shift 2 = 405 menit, Shift 3 = 370 menit.
+              Hari kerja diambil otomatis dari Kalender Kerja (total tanggal ON). Shift diisi 0 = tidak aktif. Jam kerja: Shift 1 = 435 menit, Shift 2 = 405 menit, Shift 3 = 370 menit.
             </div>
             <div class="table-wrap">
               <table class="shift-config-table">
@@ -1620,6 +1682,7 @@ let state = {
   dbPCS: [],         // [{technology, group, batteryType, plate, separator, spacer, line1, ct1, batHr1, s1_1, s2_1, s3_1, total1, bottleneck1, line2, ct2, batHr2, s1_2, s2_2, s3_2, total2, bottleneck2}]
   orders: {},        // { "2025-01": [{...row data...}] }
   capacity: {},      // { "2025-01": { "LINE 5": {workDays:22, s1:1, s2:1, s3:0} } }
+  workCalendar: {},  // { "2025-01": { "2025-01-01": 0/1, ... } }
   mpParams: {},      // { "LINE 5": {std:3, loader:1, qc:1, note:""} }
   pendingUpload: null,
   pendingPeriod: null,
@@ -2949,6 +3012,102 @@ function refreshCapPeriods() {
   loadCapacityForPeriod();
 }
 
+function getPeriodDayCount(period) {
+  const [y, m] = period.split('-').map(n => parseInt(n, 10));
+  return new Date(y, m, 0).getDate();
+}
+
+function buildDefaultWorkCalendar(period) {
+  const [y, m] = period.split('-').map(n => parseInt(n, 10));
+  const days = getPeriodDayCount(period);
+  const out = {};
+  for (let d = 1; d <= days; d++) {
+    const dt = new Date(y, m - 1, d);
+    const dow = dt.getDay(); // 0=Sun ... 6=Sat
+    const key = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    out[key] = (dow >= 1 && dow <= 5) ? 1 : 0; // default ON: Senin-Jumat
+  }
+  return out;
+}
+
+function ensureWorkCalendar(period) {
+  if (!state.workCalendar) state.workCalendar = {};
+  const dayCount = getPeriodDayCount(period);
+  const existing = state.workCalendar[period];
+  if (!existing || typeof existing !== 'object') {
+    state.workCalendar[period] = buildDefaultWorkCalendar(period);
+    return;
+  }
+
+  // normalize old/incomplete data
+  const [y, m] = period.split('-').map(n => parseInt(n, 10));
+  for (let d = 1; d <= dayCount; d++) {
+    const key = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    if (typeof existing[key] === 'undefined') {
+      const dow = new Date(y, m - 1, d).getDay();
+      existing[key] = (dow >= 1 && dow <= 5) ? 1 : 0;
+    } else {
+      existing[key] = existing[key] ? 1 : 0;
+    }
+  }
+}
+
+function getWorkDaysOn(period) {
+  ensureWorkCalendar(period);
+  return Object.values(state.workCalendar[period] || {}).reduce((s, v) => s + (v ? 1 : 0), 0);
+}
+
+function renderWorkCalendar(period) {
+  ensureWorkCalendar(period);
+  const cal = state.workCalendar[period] || {};
+  const [y, m] = period.split('-').map(n => parseInt(n, 10));
+  const days = getPeriodDayCount(period);
+
+  const labelEl = document.getElementById('workcal-period-label');
+  const totalEl = document.getElementById('workcal-total');
+  const gridEl = document.getElementById('workcal-grid');
+  if (!gridEl) return;
+
+  if (labelEl) labelEl.textContent = periodLabel(period);
+  if (totalEl) totalEl.textContent = `Hari ON: ${getWorkDaysOn(period)}`;
+
+  const dows = ['Sen','Sel','Rab','Kam','Jum','Sab','Min'];
+  const firstDow = new Date(y, m - 1, 1).getDay(); // 0=Min
+  const firstCol = (firstDow + 6) % 7; // 0=Sen
+
+  let html = dows.map(d => `<div class="workcal-dow">${d}</div>`).join('');
+  for (let i = 0; i < firstCol; i++) html += `<div></div>`;
+
+  for (let d = 1; d <= days; d++) {
+    const dateKey = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dt = new Date(y, m - 1, d);
+    const dow = dt.getDay();
+    const on = !!cal[dateKey];
+    const weekend = (dow === 0 || dow === 6);
+    html += `<button type="button" class="workcal-cell ${on ? 'on' : 'off'} ${weekend ? 'weekend' : ''}" onclick="toggleWorkCalendarDate('${period}','${dateKey}')">${d}</button>`;
+  }
+
+  gridEl.innerHTML = html;
+}
+
+function toggleWorkCalendarDate(period, dateKey) {
+  ensureWorkCalendar(period);
+  state.workCalendar[period][dateKey] = state.workCalendar[period][dateKey] ? 0 : 1;
+  renderWorkCalendar(period);
+  syncWorkDaysToCapacityRows(period);
+}
+
+function syncWorkDaysToCapacityRows(period) {
+  const wd = getWorkDaysOn(period);
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  lines.forEach(line => {
+    const key = line.replace(/\s/g,'_');
+    const inp = document.getElementById(`wd-${key}`);
+    if (inp) inp.value = wd;
+    updateCapPreview(line);
+  });
+}
+
 function loadCapacityForPeriod() {
   const period = document.getElementById('cap-period-select').value;
   const noPeriod = document.getElementById('cap-no-period');
@@ -2956,10 +3115,12 @@ function loadCapacityForPeriod() {
 
   if (!period) { noPeriod.style.display=''; content.style.display='none'; return; }
   noPeriod.style.display='none'; content.style.display='';
+  renderWorkCalendar(period);
 
   // get all lines from DB LINE
   const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
   const capData = state.capacity[period] || {};
+  const workDaysOn = getWorkDaysOn(period);
 
   const tbody = document.getElementById('cap-tbody');
   if (!lines.length) {
@@ -2972,7 +3133,7 @@ function loadCapacityForPeriod() {
     return `
       <tr>
         <td><span class="badge badge-blue">${line}</span></td>
-        <td><input class="shift-input" type="number" min="0" max="31" value="${c.workDays}" id="wd-${line.replace(/\s/g,'_')}" oninput="updateCapPreview('${line}')"></td>
+        <td><input class="shift-input" type="number" min="0" max="31" value="${workDaysOn}" id="wd-${line.replace(/\s/g,'_')}" readonly title="Diambil otomatis dari Kalender Kerja"></td>
         <td>
           <label class="toggle"><input type="checkbox" ${c.s1?'checked':''} id="s1-${line.replace(/\s/g,'_')}" onchange="updateCapPreview('${line}')"><span class="toggle-slider"></span></label>
         </td>
@@ -2988,6 +3149,7 @@ function loadCapacityForPeriod() {
   }).join('');
 
   lines.forEach(l => updateCapPreview(l));
+  syncWorkDaysToCapacityRows(period);
 }
 
 function updateCapPreview(line) {
@@ -3008,11 +3170,12 @@ function saveCapacity() {
   if (!period) { toast('Pilih periode terlebih dahulu','warning'); return; }
 
   const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  const workDaysOn = getWorkDaysOn(period);
   state.capacity[period] = {};
   lines.forEach(line => {
     const key = line.replace(/\s/g,'_');
     state.capacity[period][line] = {
-      workDays: parseInt(document.getElementById(`wd-${key}`)?.value)||0,
+      workDays: workDaysOn,
       s1: document.getElementById(`s1-${key}`)?.checked ? 1 : 0,
       s2: document.getElementById(`s2-${key}`)?.checked ? 1 : 0,
       s3: document.getElementById(`s3-${key}`)?.checked ? 1 : 0,
