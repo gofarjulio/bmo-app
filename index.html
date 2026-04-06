@@ -856,8 +856,8 @@
     </nav>
 
     <div class="sidebar-footer">
-      <span class="status-dot"></span>
-      <span class="status-text collapsible-text">LocalStorage Active</span>
+      <span class="status-dot" id="storage-status-dot"></span>
+      <span class="status-text collapsible-text" id="storage-status-text">Storage: Local</span>
     </div>
 
   </aside>
@@ -1539,15 +1539,105 @@ let state = {
   pendingPeriod: null,
 };
 
+const API_STATE_URL = 'api/state.php';
+let serverSyncEnabled = false;
+let saveStateTimer = null;
+
+function setStorageStatus(mode, type='info') {
+  const txt = document.getElementById('storage-status-text');
+  const dot = document.getElementById('storage-status-dot');
+  if (txt) txt.textContent = mode;
+  if (dot) {
+    dot.style.background = type === 'ok' ? 'var(--green)' :
+                           type === 'warning' ? 'var(--yellow)' :
+                           type === 'error' ? 'var(--red)' : 'var(--text3)';
+  }
+}
+
+function hasStateData(s) {
+  if (!s || typeof s !== 'object') return false;
+  return (Array.isArray(s.dbLine) && s.dbLine.length > 0) ||
+         (Array.isArray(s.dbPCS) && s.dbPCS.length > 0) ||
+         (s.orders && Object.keys(s.orders).length > 0) ||
+         (s.capacity && Object.keys(s.capacity).length > 0) ||
+         (s.mpParams && Object.keys(s.mpParams).length > 0);
+}
+
 function saveState() {
   try {
     localStorage.setItem('bpms_state', JSON.stringify(state));
   } catch(e) { toast('Storage penuh!', 'error'); }
+
+  if (serverSyncEnabled) {
+    scheduleServerSave();
+  }
 }
 
-function loadState() {
+function scheduleServerSave(delay=450) {
+  if (saveStateTimer) clearTimeout(saveStateTimer);
+  saveStateTimer = setTimeout(() => {
+    pushStateToServer();
+  }, delay);
+}
+
+async function pushStateToServer(showErrorToast=false) {
+  if (!serverSyncEnabled) return false;
+  try {
+    const res = await fetch(API_STATE_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ state }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    setStorageStatus('Storage: Server Sync', 'ok');
+    return true;
+  } catch (e) {
+    serverSyncEnabled = false;
+    setStorageStatus('Storage: Local (server offline)', 'warning');
+    if (showErrorToast) toast('Gagal simpan ke server, mode lokal aktif', 'warning');
+    return false;
+  }
+}
+
+async function loadState() {
+  let localSnapshot = null;
   const raw = localStorage.getItem('bpms_state');
-  if (raw) { try { state = {...state, ...JSON.parse(raw)}; } catch(e) {} }
+  if (raw) {
+    try {
+      const parsedLocal = JSON.parse(raw);
+      state = {...state, ...parsedLocal};
+      localSnapshot = parsedLocal;
+    } catch(e) {}
+  }
+
+  setStorageStatus('Storage: Local', 'warning');
+
+  try {
+    const res = await fetch(API_STATE_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const payload = await res.json();
+    if (payload && payload.ok && payload.state && typeof payload.state === 'object') {
+      const serverIsEmpty = !hasStateData(payload.state);
+      const localHasData = hasStateData(localSnapshot || state);
+      serverSyncEnabled = true;
+
+      if (serverIsEmpty && localHasData) {
+        await pushStateToServer();
+        setStorageStatus('Storage: Server Sync', 'ok');
+        return;
+      }
+
+      state = { ...state, ...payload.state };
+      localStorage.setItem('bpms_state', JSON.stringify(state));
+      setStorageStatus('Storage: Server Sync', 'ok');
+      return;
+    }
+    throw new Error('Invalid payload');
+  } catch (e) {
+    serverSyncEnabled = false;
+    setStorageStatus('Storage: Local (server belum aktif)', 'warning');
+  }
 }
 
 // ============================================================
@@ -3263,45 +3353,49 @@ function refreshAllPeriodDropdowns() {
 // ============================================================
 // INIT
 // ============================================================
-loadState();
-updateBadge();
-renderDbLine();
-renderDbPCS();
-refreshAllPeriodDropdowns();
+async function initApp() {
+  await loadState();
+  updateBadge();
+  renderDbLine();
+  renderDbPCS();
+  refreshAllPeriodDropdowns();
 
-// set default month/year
-const now = new Date();
-document.getElementById('order-month').value = now.getMonth()+1;
-document.getElementById('order-year').value = now.getFullYear();
+  // set default month/year
+  const now = new Date();
+  document.getElementById('order-month').value = now.getMonth()+1;
+  document.getElementById('order-year').value = now.getFullYear();
 
-// restore sidebar state based on viewport
-(function initSidebar() {
-  const sidebar = document.getElementById('sidebar');
-  const spacer  = document.getElementById('sidebar-spacer');
-  if (!sidebar) return;
+  // restore sidebar state based on viewport
+  (function initSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const spacer  = document.getElementById('sidebar-spacer');
+    if (!sidebar) return;
 
-  if (isTablet()) {
-    // Tablet: collapsed by default, restore if user had expanded
-    const tabletExpanded = localStorage.getItem('bpms_tablet_expanded') === '1';
-    if (tabletExpanded) {
-      sidebar.classList.add('force-expanded');
-      if (spacer) spacer.classList.add('force-expanded');
+    if (isTablet()) {
+      // Tablet: collapsed by default, restore if user had expanded
+      const tabletExpanded = localStorage.getItem('bpms_tablet_expanded') === '1';
+      if (tabletExpanded) {
+        sidebar.classList.add('force-expanded');
+        if (spacer) spacer.classList.add('force-expanded');
+      }
+    } else if (window.innerWidth > 1100) {
+      // Desktop: restore collapsed pref
+      if (localStorage.getItem('bpms_sidebar_collapsed') === '1') {
+        sidebarCollapsed = true;
+        sidebar.classList.add('collapsed');
+        if (spacer) spacer.classList.add('collapsed');
+      }
     }
-  } else if (window.innerWidth > 1100) {
-    // Desktop: restore collapsed pref
-    if (localStorage.getItem('bpms_sidebar_collapsed') === '1') {
-      sidebarCollapsed = true;
-      sidebar.classList.add('collapsed');
-      if (spacer) spacer.classList.add('collapsed');
-    }
-  }
-})();
+  })();
 
-// inject hamburger buttons into all topbars (mobile)
-injectHamburgers();
+  // inject hamburger buttons into all topbars (mobile)
+  injectHamburgers();
 
-// tampilkan dashboard sebagai halaman awal
-showPage('dashboard');
+  // tampilkan dashboard sebagai halaman awal
+  showPage('dashboard');
+}
+
+initApp();
 </script>
 </body>
 </html>

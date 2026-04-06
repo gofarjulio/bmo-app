@@ -1,0 +1,12 @@
+{
+  "updatedAt": null,
+  "state": {
+    "dbLine": [],
+    "dbPCS": [],
+    "orders": {},
+    "capacity": {},
+    "mpParams": {},
+    "pendingUpload": null,
+    "pendingPeriod": null
+  }
+}
