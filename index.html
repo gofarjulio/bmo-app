@@ -1048,7 +1048,7 @@
                   <span id="dash-dbline-count" class="badge badge-blue">0</span>
                 </div>
                 <div style="font-size:12px;font-weight:600;color:var(--text)">Database LINE</div>
-                <div style="font-size:11px;color:var(--text3)">Mapping ITEM ke production line</div>
+                <div style="font-size:11px;color:var(--text3)">Master proses, MP, dan cycle time per line</div>
               </div>
 
               <div class="dash-menu-card" onclick="showPage('db-pcs')" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all 0.15s;display:flex;flex-direction:column;gap:8px" onmouseover="this.style.borderColor='var(--accent)';this.style.background='var(--accent-dim)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
@@ -1154,72 +1154,38 @@
       <div class="topbar">
         <div>
           <div class="topbar-title">Database LINE</div>
-          <div class="topbar-sub">Mapping ITEM prefix → Production Line</div>
+          <div class="topbar-sub">Master Proses, Man Power, dan Cycle Time per LINE</div>
         </div>
         <div class="topbar-actions">
-          <button class="btn btn-ghost" onclick="exportDbLine()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Export
+          <button class="btn btn-primary" onclick="saveLineProcessData()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Simpan
           </button>
-          <button class="btn btn-primary" onclick="document.getElementById('file-db-line').click()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
-            Upload Excel
-          </button>
-          <input type="file" id="file-db-line" accept=".xlsx,.xls" style="display:none" onchange="uploadDbLine(this)">
         </div>
       </div>
 
       <div style="padding:24px">
         <div class="alert alert-info">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Format Excel: Kolom A = nama LINE, Kolom B = ITEM prefix. Tiap baris = 1 mapping. Contoh: A1="LINE 5", B1="F-ACDP-48D26RX-A9C3"
+          Klik tombol Detail pada line untuk membuka daftar proses. Isi jumlah MP dan cycle time (detik) pada tiap proses.
         </div>
 
         <div class="card">
           <div class="card-header">
             <div class="card-title">
               <div class="card-title-dot"></div>
-              Data LINE
+              Master LINE (Line 1 sampai Line 7)
             </div>
-            <div style="display:flex;align-items:center;gap:8px">
-              <span id="db-line-filtered-count" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></span>
-              <button class="btn btn-ghost" id="btn-reset-line" onclick="resetDbLineFilter()" style="padding:4px 10px;font-size:11px;display:none">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
-                Reset Filter
-              </button>
-              <span id="db-line-count" class="badge badge-blue">0 records</span>
-            </div>
+            <span id="db-line-count" class="badge badge-blue">7 lines</span>
           </div>
 
-          <div id="db-line-empty" class="empty-state">
-            <div class="empty-icon">🗄️</div>
-            <div class="empty-title">Belum ada data LINE</div>
-            <div class="empty-sub">Upload file Excel untuk memulai</div>
-          </div>
-
-          <div id="db-line-table-wrap" style="display:none">
-            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="db-line-summary"></div>
-            <div class="table-wrap table-scroll">
-              <table class="table-frozen single-header">
-                <thead>
-                  <tr><th>#</th><th>LINE</th><th>ITEM Prefix</th><th>Action</th></tr>
-                  <tr class="filter-row">
-                    <th></th>
-                    <th>
-                      <select class="col-filter" id="fl-line-line" onchange="applyDbLineFilter()" style="display:none"><option value="">Semua</option></select>
-                      <div class="excel-filter-anchor">
-                        <button class="excel-filter-btn" id="btn-fl-line-line" onclick="openExcelFilter('fl-line-line', event)" type="button">
-                          <span>Semua</span><span class="excel-filter-btn-caret">▼</span>
-                        </button>
-                      </div>
-                    </th>
-                    <th><input class="col-filter" id="fl-line-prefix" placeholder="Cari prefix..." oninput="applyDbLineFilter()"></th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody id="db-line-tbody"></tbody>
-              </table>
-            </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th style="width:50px">#</th><th>LINE</th><th>Total Proses</th><th>Total MP</th><th style="width:120px">Detail</th></tr>
+              </thead>
+              <tbody id="line-master-tbody"></tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -1720,7 +1686,8 @@
 // STATE
 // ============================================================
 let state = {
-  dbLine: [],        // [{line, prefix}]
+  dbLine: [],        // [{line}]
+  lineProcessData: {}, // { "Line 1":[{name,mp,ct}], ... }
   dbPCS: [],         // [{technology, group, batteryType, plate, separator, spacer, line1, ct1, batHr1, s1_1, s2_1, s3_1, total1, bottleneck1, line2, ct2, batHr2, s1_2, s2_2, s3_2, total2, bottleneck2}]
   orders: {},        // { "2025-01": [{...row data...}] }
   capacity: {},      // { "2025-01": { "LINE 5": {workDays:22, s1:1, s2:1, s3:0} } }
@@ -1818,8 +1785,7 @@ function syncExcelFilterButton(selectId) {
 }
 
 function applyFilterBySelectId(selectId) {
-  if (selectId === 'fl-line-line') applyDbLineFilter();
-  else if (selectId.startsWith('fp-')) applyPCSFilter();
+  if (selectId.startsWith('fp-')) applyPCSFilter();
   else if (selectId.startsWith('fo-')) applyOrderFilter();
 }
 
@@ -2104,6 +2070,7 @@ function showPage(id) {
 
   // refresh pada navigasi
   if (id === 'dashboard') renderDashboard();
+  if (id === 'db-line') renderDbLine();
   if (id === 'order-list') renderOrderList();
   if (id === 'lvc') refreshLVCPeriods();
   if (id === 'capacity') refreshCapPeriods();
@@ -2163,7 +2130,7 @@ function renderDashboard() {
     <div class="stat-card">
       <div class="stat-label">Database LINE</div>
       <div class="stat-value" style="color:${totalLineMapping?'var(--accent)':'var(--red)'}">${totalLineMapping}</div>
-      <div class="stat-sub">mapping ITEM prefix</div>
+      <div class="stat-sub">line aktif</div>
     </div>
     <div class="stat-card">
       <div class="stat-label">Database PCS</div>
@@ -2240,7 +2207,7 @@ function renderDashboard() {
   // SYSTEM STATUS
   const statusList = document.getElementById('dash-status-list');
   const checks = [
-    { label: 'Database LINE', ok: state.dbLine.length > 0, detail: state.dbLine.length ? `${[...new Set(state.dbLine.map(d=>d.line))].length} LINE, ${state.dbLine.length} mapping` : 'Belum diupload' },
+    { label: 'Database LINE', ok: state.dbLine.length > 0, detail: state.dbLine.length ? `${[...new Set(state.dbLine.map(d=>d.line))].length} LINE, master proses siap` : 'Belum dikonfigurasi' },
     { label: 'Database PCS', ok: state.dbPCS.length > 0, detail: state.dbPCS.length ? `${state.dbPCS.length} record` : 'Belum diupload' },
     { label: 'Data Order', ok: keys.length > 0, detail: keys.length ? `${keys.length} periode tersimpan` : 'Belum ada data' },
     { label: 'Setting Kapasitas', ok: Object.keys(state.capacity).length > 0, detail: Object.keys(state.capacity).length ? `${Object.keys(state.capacity).length} periode terkonfigurasi` : 'Belum dikonfigurasi' },
@@ -2302,116 +2269,172 @@ function toast(msg, type='info') {
 }
 
 // ============================================================
-// DB LINE UPLOAD
+// DB LINE - PROCESS MASTER
 // ============================================================
-function uploadDbLine(input) {
-  const file = input.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const wb = XLSX.read(e.target.result, {type:'binary'});
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
-    state.dbLine = [];
-    rows.forEach(r => {
-      const line = String(r[0]||'').trim();
-      const prefix = String(r[1]||'').trim();
-      if (line && prefix) state.dbLine.push({line, prefix});
-    });
-    saveState();
-    renderDbLine();
-    toast(`${state.dbLine.length} mapping LINE berhasil diupload`, 'success');
-    input.value = '';
-  };
-  reader.readAsBinaryString(file);
+const DEFAULT_LINES = ['Line 1','Line 2','Line 3','Line 4','Line 5','Line 6','Line 7'];
+
+const PROCESS_MASTER = [
+  { name: 'Loading Plate Cutting' },
+  { name: 'Mesin Plate Cutting' },
+  { name: 'Unloading Plate Cutting' },
+  { name: 'Loading Envelope' },
+  { name: 'Mesin Envelope' },
+  { name: 'Unloading Envelope' },
+  { name: 'Mearing 1' },
+  { name: 'Mearing 2' },
+  { name: 'Mearing 3' },
+  { name: 'Mearing 4' },
+  { name: 'Loading COS (Line 1, 2, 3, 4)', lines: [1,2,3,4] },
+  { name: 'Mesin COS' },
+  { name: 'Unloading COS (Line 1 dan 4)', lines: [1,4] },
+  { name: 'SAW 1 (Line 4 dan 7)', lines: [4,7] },
+  { name: 'SAW 2 (Line 4 dan 7)', lines: [4,7] },
+  { name: 'Inserting 1 (Line 4 dan 7)', lines: [4,7] },
+  { name: 'Inserting 2 (Line 4 dan 7)', lines: [4,7] },
+  { name: 'Adjusting PW' },
+  { name: 'Mesin Short Test - Polarity 1' },
+  { name: 'Mesin PW 1' },
+  { name: 'Mesin PW 2' },
+  { name: 'Mesin PW 3' },
+  { name: 'Mesin Short Test - Polarity 2' },
+  { name: 'Mesin IRT' },
+  { name: 'HSM Pasang Cover Manual' },
+  { name: 'Auto Cover' },
+  { name: 'Mesin HSM' },
+  { name: 'Mesin APB' },
+  { name: 'Manual Pole Burning' },
+  { name: 'Mesin ALT' },
+  { name: 'Mesin Datecode' },
+  { name: 'Mesin Brushing' },
+  { name: 'Mesin Oiling' },
+  { name: 'Mesin Dry Sealing' },
+  { name: 'Packing Manual' },
+  { name: 'Palletizing' },
+];
+
+window._lineDetailOpen = window._lineDetailOpen || {};
+
+function lineNumber(lineName) {
+  const m = String(lineName || '').match(/(\d+)/);
+  return m ? parseInt(m[1], 10) : 0;
+}
+
+function lineKey(lineName) {
+  return String(lineName || '').replace(/[^a-zA-Z0-9]+/g, '_');
+}
+
+function getProcessesForLine(lineName) {
+  const ln = lineNumber(lineName);
+  return PROCESS_MASTER
+    .filter(p => !p.lines || p.lines.includes(ln))
+    .map(p => p.name);
+}
+
+function ensureLineProcessData() {
+  state.dbLine = DEFAULT_LINES.map(line => ({ line }));
+  if (!state.lineProcessData || typeof state.lineProcessData !== 'object') {
+    state.lineProcessData = {};
+  }
+
+  DEFAULT_LINES.forEach(line => {
+    const template = getProcessesForLine(line);
+    const current = Array.isArray(state.lineProcessData[line]) ? state.lineProcessData[line] : [];
+    const map = {};
+    current.forEach(r => { map[r.name] = r; });
+
+    state.lineProcessData[line] = template.map(name => ({
+      name,
+      mp: Math.max(0, parseInt(map[name]?.mp) || 0),
+      ct: Math.max(0, parseFloat(map[name]?.ct) || 0),
+    }));
+  });
+}
+
+function getLineProcessSummary(line) {
+  const rows = state.lineProcessData?.[line] || [];
+  const totalProc = rows.length;
+  const totalMP = rows.reduce((s, r) => s + (parseInt(r.mp) || 0), 0);
+  return { totalProc, totalMP };
+}
+
+function toggleLineDetail(line) {
+  window._lineDetailOpen[line] = !window._lineDetailOpen[line];
+  renderDbLine();
+}
+
+function updateLineProcessValue(line, idx, field, value) {
+  if (!state.lineProcessData?.[line]?.[idx]) return;
+  if (field === 'mp') {
+    state.lineProcessData[line][idx].mp = Math.max(0, parseInt(value) || 0);
+  } else if (field === 'ct') {
+    state.lineProcessData[line][idx].ct = Math.max(0, parseFloat(value) || 0);
+  }
+  saveState();
+
+  const key = lineKey(line);
+  const sum = getLineProcessSummary(line);
+  const procEl = document.getElementById(`line-proc-${key}`);
+  const mpEl = document.getElementById(`line-mp-${key}`);
+  if (procEl) procEl.textContent = sum.totalProc;
+  if (mpEl) mpEl.textContent = sum.totalMP;
 }
 
 function renderDbLine() {
-  const data = state.dbLine;
+  ensureLineProcessData();
+
   const count = document.getElementById('db-line-count');
-  count.textContent = `${data.length} records`;
+  if (count) count.textContent = `${DEFAULT_LINES.length} lines`;
 
-  const empty = document.getElementById('db-line-empty');
-  const wrap = document.getElementById('db-line-table-wrap');
+  const tbody = document.getElementById('line-master-tbody');
+  if (!tbody) return;
 
-  const exportBtnPCS = document.getElementById('btn-export-pcs');
-  if (!data.length) {
-    empty.style.display=''; wrap.style.display='none';
-    if (exportBtnPCS) exportBtnPCS.style.display = 'none';
-    return;
-  }
-  empty.style.display='none'; wrap.style.display='';
-  if (exportBtnPCS) exportBtnPCS.style.display = '';
+  tbody.innerHTML = DEFAULT_LINES.map((line, i) => {
+    const key = lineKey(line);
+    const open = !!window._lineDetailOpen[line];
+    const sum = getLineProcessSummary(line);
+    const rows = state.lineProcessData[line] || [];
 
-  // summary badges
-  const lines = [...new Set(data.map(d=>d.line))].sort();
-  const summary = document.getElementById('db-line-summary');
-  summary.innerHTML = lines.map(l => {
-    const cnt = data.filter(d=>d.line===l).length;
-    return `<span class="badge badge-blue">${l}: ${cnt} item</span>`;
+    const detailHtml = open ? `
+      <tr>
+        <td colspan="5" style="background:var(--surface2)">
+          <div class="table-wrap" style="margin:8px 0 2px 0">
+            <table>
+              <thead>
+                <tr><th style="width:52px">#</th><th>Nama Proses</th><th style="width:140px">MP</th><th style="width:160px">Cycle Time (sec)</th></tr>
+              </thead>
+              <tbody>
+                ${rows.map((r, idx) => `
+                  <tr>
+                    <td class="td-mono">${idx + 1}</td>
+                    <td>${r.name}</td>
+                    <td><input class="shift-input" type="number" min="0" value="${r.mp}" oninput="updateLineProcessValue('${line}', ${idx}, 'mp', this.value)"></td>
+                    <td><input class="shift-input" type="number" min="0" step="0.1" value="${r.ct}" oninput="updateLineProcessValue('${line}', ${idx}, 'ct', this.value)"></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </td>
+      </tr>
+    ` : '';
+
+    return `
+      <tr>
+        <td class="td-mono">${i + 1}</td>
+        <td><span class="badge badge-blue">${line}</span></td>
+        <td class="td-mono" id="line-proc-${key}">${sum.totalProc}</td>
+        <td class="td-mono td-bold" id="line-mp-${key}">${sum.totalMP}</td>
+        <td><button class="btn btn-ghost" style="padding:4px 10px;font-size:11px" onclick="toggleLineDetail('${line}')">${open ? 'Tutup' : 'Detail'}</button></td>
+      </tr>
+      ${detailHtml}
+    `;
   }).join('');
-
-  // populate filter dropdown
-  setFilterOptions('fl-line-line', lines);
-
-  window._dbLineData = data;
-  applyDbLineFilter();
-  setTimeout(syncFrozenTableHeaders, 0);
 }
 
-function applyDbLineFilter() {
-  const data = window._dbLineData || state.dbLine;
-  const prefixF = (document.getElementById('fl-line-prefix')?.value || '').toLowerCase();
-
-  const lineHasFilter = hasActiveExcelFilter('fl-line-line');
-  const hasFilter = lineHasFilter || !!prefixF;
-
-  // update filter active indicator
-  syncExcelFilterButton('fl-line-line');
-  document.getElementById('fl-line-prefix')?.classList.toggle('has-filter', !!prefixF);
-
-  const filtered = data.filter(d =>
-    isAllowedByExcelFilter('fl-line-line', d.line) &&
-    (!prefixF || d.prefix.toLowerCase().includes(prefixF))
-  );
-
-  // show/hide reset button and count
-  const resetBtn = document.getElementById('btn-reset-line');
-  const countEl = document.getElementById('db-line-filtered-count');
-  if (resetBtn) resetBtn.style.display = hasFilter ? '' : 'none';
-  if (countEl) countEl.textContent = hasFilter ? `${filtered.length} / ${data.length} baris` : '';
-
-  const tbody = document.getElementById('db-line-tbody');
-  tbody.innerHTML = filtered.map((d,i) => `
-    <tr>
-      <td class="td-mono">${i+1}</td>
-      <td><span class="badge badge-blue">${d.line}</span></td>
-      <td class="td-mono">${d.prefix}</td>
-      <td><button class="btn btn-danger" style="padding:3px 8px;font-size:11px" onclick="deleteDbLineRow(${state.dbLine.indexOf(d)})">Hapus</button></td>
-    </tr>
-  `).join('') || `<tr><td colspan="4" style="text-align:center;color:var(--text3);padding:20px">Tidak ada data yang sesuai filter</td></tr>`;
-}
-
-function resetDbLineFilter() {
-  const inp = document.getElementById('fl-line-prefix');
-  if (inp) inp.value = '';
-  resetExcelFilterSelection('fl-line-line');
-  applyDbLineFilter();
-}
-
-function deleteDbLineRow(i) {
-  state.dbLine.splice(i,1);
+function saveLineProcessData() {
+  ensureLineProcessData();
   saveState();
-  renderDbLine();
-  toast('Baris dihapus','info');
-}
-
-function exportDbLine() {
-  if (!state.dbLine.length) { toast('Tidak ada data','warning'); return; }
-  const ws = XLSX.utils.json_to_sheet(state.dbLine.map(d=>({'LINE':d.line,'ITEM Prefix':d.prefix})));
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'DB_LINE');
-  XLSX.writeFile(wb, 'db_line_export.xlsx');
+  toast('Master proses LINE tersimpan', 'success');
 }
 
 // ============================================================
@@ -3947,3 +3970,5 @@ initApp();
 </script>
 </body>
 </html>
+
+
