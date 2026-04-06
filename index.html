@@ -3047,10 +3047,12 @@ function getCTForItemOnLine(item, targetLine) {
 // ============================================================
 function refreshCapPeriods() {
   const sel = document.getElementById('cap-period-select');
+  if (!sel) return;
   const cur = sel.value;
-  const keys = Object.keys(state.orders).sort().reverse();
+  const keys = Array.from({length: 12}, (_, i) => `2026-${String(i+1).padStart(2,'0')}`);
   sel.innerHTML = '<option value="">-- Pilih Periode --</option>' +
     keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${periodLabel(k)}</option>`).join('');
+  if (!cur) sel.value = keys[0];
   loadCapacityForPeriod();
 }
 
@@ -3880,10 +3882,8 @@ function periodLabel(key) {
 
 function refreshAllPeriodDropdowns() {
   const keys = Object.keys(state.orders).sort().reverse();
-  const opts = '<option value="">-- Semua Periode --</option>' +
-    keys.map(k=>`<option value="${k}">${periodLabel(k)}</option>`).join('');
 
-  ['filter-order-period','cap-period-select','lvc-period-select','mp-period-select'].forEach(id => {
+  ['filter-order-period','lvc-period-select','mp-period-select'].forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
     const cur = el.value;
@@ -3894,6 +3894,7 @@ function refreshAllPeriodDropdowns() {
     }
     if (cur) el.value = cur;
   });
+  refreshCapPeriods();
   updateBadge();
 }
 
