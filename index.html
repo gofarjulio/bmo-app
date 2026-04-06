@@ -1381,17 +1381,19 @@
                     <th>1st LINE</th><th>2nd LINE</th><th>QTY</th><th>Type</th>
                   </tr>
                   <tr class="filter-row">
-                    <th></th>
+                    <th><input class="col-filter" id="fo-no" placeholder="No..." oninput="applyOrderFilter()"></th>
                     <th><input class="col-filter" id="fo-item" placeholder="Cari ITEM..." oninput="applyOrderFilter()"></th>
-                    <th></th>
+                    <th><input class="col-filter" id="fo-pncustomer" placeholder="Cari PN..." oninput="applyOrderFilter()"></th>
                     <th><select class="col-filter" id="fo-customer" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-customer" onclick="openExcelFilter('fo-customer', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
-                    <th></th>
+                    <th><input class="col-filter" id="fo-nopo" placeholder="Cari PO..." oninput="applyOrderFilter()"></th>
                     <th><select class="col-filter" id="fo-batttype" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-batttype" onclick="openExcelFilter('fo-batttype', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th><select class="col-filter" id="fo-tech" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-tech" onclick="openExcelFilter('fo-tech', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th><select class="col-filter" id="fo-plate" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-plate" onclick="openExcelFilter('fo-plate', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th><select class="col-filter" id="fo-sep" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-sep" onclick="openExcelFilter('fo-sep', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th><select class="col-filter" id="fo-line" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-line" onclick="openExcelFilter('fo-line', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
-                    <th></th><th></th><th></th>
+                    <th><select class="col-filter" id="fo-line2" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-line2" onclick="openExcelFilter('fo-line2', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><input class="col-filter" id="fo-qty" placeholder="QTY..." oninput="applyOrderFilter()"></th>
+                    <th><select class="col-filter" id="fo-type" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-type" onclick="openExcelFilter('fo-type', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                   </tr>
                 </thead>
                 <tbody id="order-detail-tbody"></tbody>
@@ -2671,6 +2673,8 @@ function renderOrderList() {
   // populate filter dropdowns
   setFilterOptions('fo-customer', enriched.map(o=>o.customer));
   setFilterOptions('fo-line', enriched.map(o=>o.lineAssigned||'Unmapped'));
+  setFilterOptions('fo-line2', enriched.map(o=>o.lineSecond||'-'));
+  setFilterOptions('fo-type', enriched.map(o=>o.type||'-'));
   setFilterOptions('fo-tech', enriched.map(o=>o.specs.technology).filter(Boolean));
   setFilterOptions('fo-plate', enriched.map(o=>o.specs.plate).filter(Boolean));
   setFilterOptions('fo-sep', enriched.map(o=>o.specs.separator).filter(Boolean));
@@ -2682,21 +2686,35 @@ function renderOrderList() {
 
 function applyOrderFilter() {
   const data = window._currentOrderData || [];
+  const noF      = (document.getElementById('fo-no')?.value || '').toLowerCase();
   const itemF    = (document.getElementById('fo-item')?.value || '').toLowerCase();
+  const pnCustF  = (document.getElementById('fo-pncustomer')?.value || '').toLowerCase();
+  const noPoF    = (document.getElementById('fo-nopo')?.value || '').toLowerCase();
+  const qtyF     = (document.getElementById('fo-qty')?.value || '').toLowerCase();
   const searchQ  = (document.getElementById('search-order')?.value || '').toLowerCase();
-  const dropdownIds = ['fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'];
+  const dropdownIds = ['fo-customer','fo-line','fo-line2','fo-type','fo-tech','fo-plate','fo-sep','fo-batttype'];
   const hasDropdownFilter = dropdownIds.some(id => hasActiveExcelFilter(id));
-  const hasFilter = !!(itemF || searchQ || hasDropdownFilter);
+  const hasFilter = !!(noF || itemF || pnCustF || noPoF || qtyF || searchQ || hasDropdownFilter);
 
   // active indicators
+  document.getElementById('fo-no')?.classList.toggle('has-filter', !!noF);
   document.getElementById('fo-item')?.classList.toggle('has-filter', !!itemF);
+  document.getElementById('fo-pncustomer')?.classList.toggle('has-filter', !!pnCustF);
+  document.getElementById('fo-nopo')?.classList.toggle('has-filter', !!noPoF);
+  document.getElementById('fo-qty')?.classList.toggle('has-filter', !!qtyF);
   dropdownIds.forEach(id => syncExcelFilterButton(id));
 
   const filtered = data.filter(o => {
+    if (noF && !String(o.no_urut ?? '').toLowerCase().includes(noF)) return false;
     if (itemF   && !o.item.toLowerCase().includes(itemF)) return false;
+    if (pnCustF && !String(o.pn_customer || '').toLowerCase().includes(pnCustF)) return false;
+    if (noPoF && !String(o.no_po || '').toLowerCase().includes(noPoF)) return false;
+    if (qtyF && !String(o.qty_order ?? '').toLowerCase().includes(qtyF)) return false;
     if (searchQ && !o.item.toLowerCase().includes(searchQ) && !o.customer.toLowerCase().includes(searchQ)) return false;
     if (!isAllowedByExcelFilter('fo-customer', o.customer)) return false;
     if (!isAllowedByExcelFilter('fo-line', o.lineAssigned || 'Unmapped')) return false;
+    if (!isAllowedByExcelFilter('fo-line2', o.lineSecond || '-')) return false;
+    if (!isAllowedByExcelFilter('fo-type', o.type || '-')) return false;
     if (!isAllowedByExcelFilter('fo-batttype', o.specs.batteryType)) return false;
     if (!isAllowedByExcelFilter('fo-tech', o.specs.technology)) return false;
     if (!isAllowedByExcelFilter('fo-plate', String(o.specs.plate))) return false;
@@ -2751,11 +2769,11 @@ function applyOrderFilter() {
 }
 
 function resetOrderFilter() {
-  ['fo-item'].forEach(id => {
+  ['fo-no','fo-item','fo-pncustomer','fo-nopo','fo-qty'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  ['fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => resetExcelFilterSelection(id));
+  ['fo-customer','fo-line','fo-line2','fo-type','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => resetExcelFilterSelection(id));
   const searchEl = document.getElementById('search-order');
   if (searchEl) searchEl.value = '';
   applyOrderFilter();
