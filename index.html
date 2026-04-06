@@ -833,7 +833,16 @@
     display: grid;
     grid-template-columns: repeat(7, minmax(34px, 1fr));
     gap: 6px;
-    max-width: 420px;
+    width: 100%;
+  }
+  .workcal-layout {
+    display: grid;
+    grid-template-columns: minmax(320px, 460px) minmax(220px, 1fr);
+    gap: 16px;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    .workcal-layout { grid-template-columns: 1fr; }
   }
   .workcal-dow {
     font-size: 10px;
@@ -864,6 +873,27 @@
   .workcal-cell.weekend {
     border-style: dashed;
   }
+  .workcal-cell.evt-national { background:#123e69; color:#79c6ff; border-color:#2f6ea3; }
+  .workcal-cell.evt-cuti { background:#5e5700; color:#fff176; border-color:#9c9000; }
+  .workcal-cell.evt-libur-ganti { background:#6a2e14; color:#ffb087; border-color:#a94d24; }
+  .workcal-cell.evt-work-ganti { background:#0d4b2d; color:#8df0bc; border-color:#2f8f62; }
+  .workcal-legend-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .workcal-pill {
+    font-size:10px; padding:3px 8px; border-radius:999px; border:1px solid var(--border2); font-family:var(--mono);
+  }
+  .workcal-note-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 10px;
+  }
+  .workcal-note-title { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:8px; }
+  .workcal-note-item {
+    font-size:11px; color:var(--text2); border-bottom:1px solid var(--border); padding:6px 0;
+    display:flex; gap:8px; align-items:flex-start;
+  }
+  .workcal-note-item:last-child { border-bottom:none; }
+  .workcal-note-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; flex:0 0 auto; }
 
   /* filter active indicator */
   .col-filter.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim2); }
@@ -1488,8 +1518,20 @@
               <div id="workcal-period-label" class="badge badge-blue">-</div>
               <div id="workcal-total" class="badge badge-green">Hari ON: 0</div>
             </div>
-            <div class="workcal-legend">Klik tanggal untuk ON/OFF. Total ON otomatis dipakai sebagai Hari Kerja semua LINE.</div>
-            <div id="workcal-grid" class="workcal-grid" style="margin-top:10px"></div>
+            <div class="workcal-legend">Klik tanggal untuk ON/OFF. Default 2026 mengikuti panduan kalender kerja resmi.</div>
+            <div class="workcal-legend-pills">
+              <span class="workcal-pill" style="background:#123e69;color:#79c6ff;border-color:#2f6ea3">Libur nasional (OFF)</span>
+              <span class="workcal-pill" style="background:#5e5700;color:#fff176;border-color:#9c9000">Cuti bersama (OFF)</span>
+              <span class="workcal-pill" style="background:#6a2e14;color:#ffb087;border-color:#a94d24">Libur dengan penggantian (OFF)</span>
+              <span class="workcal-pill" style="background:#0d4b2d;color:#8df0bc;border-color:#2f8f62">Hari kerja pengganti (ON)</span>
+            </div>
+            <div class="workcal-layout" style="margin-top:10px">
+              <div id="workcal-grid" class="workcal-grid"></div>
+              <div class="workcal-note-box">
+                <div class="workcal-note-title">Keterangan Periode</div>
+                <div id="workcal-notes"></div>
+              </div>
+            </div>
           </div>
 
           <div class="card">
@@ -3017,15 +3059,90 @@ function getPeriodDayCount(period) {
   return new Date(y, m, 0).getDate();
 }
 
+const WORK_CAL_2026_GUIDE = {
+  national: [
+    ['2026-01-01', 'Tahun Baru 2026 Masehi'],
+    ['2026-01-16', "Isra Mi'raj Nabi Muhammad"],
+    ['2026-02-17', 'Tahun Baru Imlek 2577 Kongzili'],
+    ['2026-03-19', 'Hari Raya Nyepi Tahun Baru Saka 1948'],
+    ['2026-03-21', 'Hari Raya Idul Fitri 1447 H'],
+    ['2026-03-22', 'Hari Raya Idul Fitri 1447 H'],
+    ['2026-04-03', 'Wafat Isa Al Masih'],
+    ['2026-04-05', 'Hari Paskah'],
+    ['2026-05-01', 'Hari Buruh'],
+    ['2026-05-14', 'Kenaikan Isa Al Masih'],
+    ['2026-05-27', 'Hari Raya Idul Adha 1447 H'],
+    ['2026-05-31', 'Hari Raya Waisak 2570 BE'],
+    ['2026-06-01', 'Hari Kelahiran Pancasila'],
+    ['2026-06-16', 'Tahun Baru Islam 1448 H'],
+    ['2026-08-17', 'Hari Kemerdekaan RI'],
+    ['2026-08-25', 'Maulid Nabi'],
+    ['2026-12-25', 'Hari Raya Natal'],
+  ],
+  cuti: [
+    ['2026-02-16', 'Cuti Bersama'],
+    ['2026-03-20', 'Cuti Bersama'],
+    ['2026-03-23', 'Cuti Bersama'],
+    ['2026-03-24', 'Cuti Bersama'],
+    ['2026-05-15', 'Cuti Bersama'],
+  ],
+  libur_ganti: [
+    ['2026-01-02', 'Libur dengan Penggantian'],
+    ['2026-03-18', 'Libur dengan Penggantian'],
+    ['2026-03-25', 'Libur dengan Penggantian'],
+    ['2026-06-15', 'Libur dengan Penggantian'],
+    ['2026-08-24', 'Libur dengan Penggantian'],
+    ['2026-10-09', 'Libur dengan Penggantian'],
+    ['2026-12-31', 'Libur dengan Penggantian'],
+  ],
+  work_ganti: [
+    ['2026-01-10', 'Hari Kerja Pengganti'],
+    ['2026-02-14', 'Hari Kerja Pengganti'],
+    ['2026-03-28', 'Hari Kerja Pengganti'],
+    ['2026-05-09', 'Hari Kerja Pengganti'],
+    ['2026-05-30', 'Hari Kerja Pengganti'],
+    ['2026-06-20', 'Hari Kerja Pengganti'],
+    ['2026-08-29', 'Hari Kerja Pengganti'],
+  ],
+};
+
+function getWorkCalendarGuide(period) {
+  const [yy, mm] = period.split('-').map(n => parseInt(n, 10));
+  const y = String(yy);
+  const monthPrefix = `${y}-${String(mm).padStart(2,'0')}-`;
+  const byDate = {};
+  const notes = [];
+
+  const pushEvent = (arr, type, on) => {
+    arr.forEach(([date, label]) => {
+      if (!date.startsWith(monthPrefix)) return;
+      byDate[date] = { type, label, on };
+      notes.push({ date, label, type, on });
+    });
+  };
+
+  if (y === '2026') {
+    pushEvent(WORK_CAL_2026_GUIDE.national, 'national', 0);
+    pushEvent(WORK_CAL_2026_GUIDE.cuti, 'cuti', 0);
+    pushEvent(WORK_CAL_2026_GUIDE.libur_ganti, 'libur_ganti', 0);
+    pushEvent(WORK_CAL_2026_GUIDE.work_ganti, 'work_ganti', 1);
+  }
+
+  notes.sort((a,b) => a.date.localeCompare(b.date));
+  return { byDate, notes };
+}
+
 function buildDefaultWorkCalendar(period) {
   const [y, m] = period.split('-').map(n => parseInt(n, 10));
   const days = getPeriodDayCount(period);
+  const guide = getWorkCalendarGuide(period);
   const out = {};
   for (let d = 1; d <= days; d++) {
     const dt = new Date(y, m - 1, d);
     const dow = dt.getDay(); // 0=Sun ... 6=Sat
     const key = `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     out[key] = (dow >= 1 && dow <= 5) ? 1 : 0; // default ON: Senin-Jumat
+    if (guide.byDate[key]) out[key] = guide.byDate[key].on ? 1 : 0;
   }
   return out;
 }
@@ -3060,12 +3177,14 @@ function getWorkDaysOn(period) {
 function renderWorkCalendar(period) {
   ensureWorkCalendar(period);
   const cal = state.workCalendar[period] || {};
+  const guide = getWorkCalendarGuide(period);
   const [y, m] = period.split('-').map(n => parseInt(n, 10));
   const days = getPeriodDayCount(period);
 
   const labelEl = document.getElementById('workcal-period-label');
   const totalEl = document.getElementById('workcal-total');
   const gridEl = document.getElementById('workcal-grid');
+  const notesEl = document.getElementById('workcal-notes');
   if (!gridEl) return;
 
   if (labelEl) labelEl.textContent = periodLabel(period);
@@ -3084,10 +3203,30 @@ function renderWorkCalendar(period) {
     const dow = dt.getDay();
     const on = !!cal[dateKey];
     const weekend = (dow === 0 || dow === 6);
-    html += `<button type="button" class="workcal-cell ${on ? 'on' : 'off'} ${weekend ? 'weekend' : ''}" onclick="toggleWorkCalendarDate('${period}','${dateKey}')">${d}</button>`;
+    const ev = guide.byDate[dateKey];
+    const evClass = ev?.type === 'national' ? 'evt-national' :
+                    ev?.type === 'cuti' ? 'evt-cuti' :
+                    ev?.type === 'libur_ganti' ? 'evt-libur-ganti' :
+                    ev?.type === 'work_ganti' ? 'evt-work-ganti' : '';
+    html += `<button type="button" title="${ev?.label || ''}" class="workcal-cell ${on ? 'on' : 'off'} ${weekend ? 'weekend' : ''} ${evClass}" onclick="toggleWorkCalendarDate('${period}','${dateKey}')">${d}</button>`;
   }
 
   gridEl.innerHTML = html;
+
+  if (notesEl) {
+    if (!guide.notes.length) {
+      notesEl.innerHTML = `<div class="workcal-note-item" style="color:var(--text3)">Tidak ada keterangan khusus pada periode ini.</div>`;
+    } else {
+      notesEl.innerHTML = guide.notes.map(n => {
+        const dot = n.type === 'national' ? '#2f6ea3' :
+                    n.type === 'cuti' ? '#9c9000' :
+                    n.type === 'libur_ganti' ? '#a94d24' : '#2f8f62';
+        const dd = parseInt(n.date.slice(8,10), 10);
+        const mmName = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(n.date.slice(5,7),10)-1];
+        return `<div class="workcal-note-item"><span class="workcal-note-dot" style="background:${dot}"></span><span>${dd} ${mmName}: ${n.label}</span></div>`;
+      }).join('');
+    }
+  }
 }
 
 function toggleWorkCalendarDate(period, dateKey) {
