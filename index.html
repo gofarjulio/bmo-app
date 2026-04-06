@@ -717,27 +717,26 @@
   }
   /* COLUMN FILTER ROW */
   .filter-row th {
-    padding: 6px 8px !important;
-    background: var(--surface2) !important;
+    padding: 4px 6px !important;
   }
   /* filter row: 2-row header tables — filter is 3rd row */
   .table-frozen thead tr:nth-child(3) th {
     top: 76px;
     z-index: 3;
-    background: var(--surface2);
+    background: var(--surface3);
     box-shadow: 0 1px 0 var(--border);
   }
   /* filter row: 1-row header tables — filter is 2nd row */
   .table-frozen.single-header thead tr:nth-child(2) th {
     top: 38px;
     z-index: 3;
-    background: var(--surface2) !important;
+    background: var(--surface3) !important;
     box-shadow: 0 1px 0 var(--border);
   }
 
   .col-filter {
     width: 100%;
-    background: var(--surface3);
+    background: var(--surface);
     border: 1px solid var(--border2);
     color: var(--text2);
     padding: 3px 6px;
@@ -750,6 +749,19 @@
   }
   .col-filter:focus { border-color: var(--accent); color: var(--text); }
   .col-filter option { background: var(--surface2); color: var(--text); }
+  .col-filter-search {
+    width: 100%;
+    margin-top: 4px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text3);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: var(--mono);
+    outline: none;
+  }
+  .col-filter-search:focus { border-color: var(--accent); color: var(--text2); }
 
   /* filter active indicator */
   .col-filter.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim2); }
@@ -1062,8 +1074,8 @@
                   <tr class="filter-row">
                     <th></th>
                     <th>
-                      <input class="col-filter" id="fl-line-line" list="fl-line-line-list" placeholder="Cari LINE..." oninput="applyDbLineFilter()">
-                      <datalist id="fl-line-line-list"></datalist>
+                      <select class="col-filter" id="fl-line-line" onchange="applyDbLineFilter()"><option value="">Semua</option></select>
+                      <input class="col-filter-search" id="fls-line-line" placeholder="Cari opsi LINE..." oninput="filterSelectOptions('fl-line-line', this.value)">
                     </th>
                     <th><input class="col-filter" id="fl-line-prefix" placeholder="Cari prefix..." oninput="applyDbLineFilter()"></th>
                     <th></th>
@@ -1156,15 +1168,15 @@
                   </tr>
                   <tr class="filter-row">
                     <th></th>
-                    <th><input class="col-filter" id="fp-technology" list="fp-technology-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-technology-list"></datalist></th>
-                    <th><input class="col-filter" id="fp-group" list="fp-group-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-group-list"></datalist></th>
-                    <th><input class="col-filter" id="fp-batterytype" list="fp-batterytype-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-batterytype-list"></datalist></th>
-                    <th><input class="col-filter" id="fp-plate" list="fp-plate-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-plate-list"></datalist></th>
-                    <th><input class="col-filter" id="fp-separator" list="fp-separator-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-separator-list"></datalist></th>
-                    <th><input class="col-filter" id="fp-spacer" list="fp-spacer-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-spacer-list"></datalist></th>
-                    <th><input class="col-filter" id="fp-line1" list="fp-line1-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-line1-list"></datalist></th>
+                    <th><select class="col-filter" id="fp-technology" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-technology" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-technology', this.value)"></th>
+                    <th><select class="col-filter" id="fp-group" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-group" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-group', this.value)"></th>
+                    <th><select class="col-filter" id="fp-batterytype" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-batterytype" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-batterytype', this.value)"></th>
+                    <th><select class="col-filter" id="fp-plate" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-plate" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-plate', this.value)"></th>
+                    <th><select class="col-filter" id="fp-separator" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-separator" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-separator', this.value)"></th>
+                    <th><select class="col-filter" id="fp-spacer" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-spacer" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-spacer', this.value)"></th>
+                    <th><select class="col-filter" id="fp-line1" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-line1" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-line1', this.value)"></th>
                     <th colspan="6"></th>
-                    <th><input class="col-filter" id="fp-line2" list="fp-line2-list" placeholder="Cari..." oninput="applyPCSFilter()"><datalist id="fp-line2-list"></datalist></th>
+                    <th><select class="col-filter" id="fp-line2" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-line2" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-line2', this.value)"></th>
                     <th colspan="6"></th>
                   </tr>
                 </thead>
@@ -1293,6 +1305,7 @@
               <div class="card-title"><div class="card-title-dot"></div>Detail Order</div>
               <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <span id="order-filtered-count" style="font-size:11px;color:var(--text3);font-family:var(--mono)"></span>
+                <input class="form-control" type="text" placeholder="Cari ITEM..." id="search-order" oninput="filterOrderTable()" style="width:160px">
                 <button class="btn btn-ghost" id="btn-reset-order" onclick="resetOrderFilter()" style="padding:4px 10px;font-size:11px;display:none">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
                   Reset
@@ -1315,13 +1328,13 @@
                     <th></th>
                     <th><input class="col-filter" id="fo-item" placeholder="Cari ITEM..." oninput="applyOrderFilter()"></th>
                     <th></th>
-                    <th><input class="col-filter" id="fo-customer" list="fo-customer-list" placeholder="Cari..." oninput="applyOrderFilter()"><datalist id="fo-customer-list"></datalist></th>
+                    <th><select class="col-filter" id="fo-customer" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-customer" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-customer', this.value)"></th>
                     <th></th>
-                    <th><input class="col-filter" id="fo-batttype" list="fo-batttype-list" placeholder="Cari..." oninput="applyOrderFilter()"><datalist id="fo-batttype-list"></datalist></th>
-                    <th><input class="col-filter" id="fo-tech" list="fo-tech-list" placeholder="Cari..." oninput="applyOrderFilter()"><datalist id="fo-tech-list"></datalist></th>
-                    <th><input class="col-filter" id="fo-plate" list="fo-plate-list" placeholder="Cari..." oninput="applyOrderFilter()"><datalist id="fo-plate-list"></datalist></th>
-                    <th><input class="col-filter" id="fo-sep" list="fo-sep-list" placeholder="Cari..." oninput="applyOrderFilter()"><datalist id="fo-sep-list"></datalist></th>
-                    <th><input class="col-filter" id="fo-line" list="fo-line-list" placeholder="Cari..." oninput="applyOrderFilter()"><datalist id="fo-line-list"></datalist></th>
+                    <th><select class="col-filter" id="fo-batttype" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-batttype" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-batttype', this.value)"></th>
+                    <th><select class="col-filter" id="fo-tech" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-tech" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-tech', this.value)"></th>
+                    <th><select class="col-filter" id="fo-plate" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-plate" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-plate', this.value)"></th>
+                    <th><select class="col-filter" id="fo-sep" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-sep" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-sep', this.value)"></th>
+                    <th><select class="col-filter" id="fo-line" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-line" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-line', this.value)"></th>
                     <th></th><th></th><th></th>
                   </tr>
                 </thead>
@@ -1566,16 +1579,6 @@ function hasStateData(s) {
          (s.mpParams && Object.keys(s.mpParams).length > 0);
 }
 
-function normTxt(v) {
-  return String(v ?? '').trim().toLowerCase();
-}
-
-function containsTxt(value, keyword) {
-  const k = normTxt(keyword);
-  if (!k) return true;
-  return normTxt(value).includes(k);
-}
-
 function escHtml(s) {
   return String(s ?? '')
     .replaceAll('&', '&amp;')
@@ -1585,11 +1588,30 @@ function escHtml(s) {
     .replaceAll("'", '&#39;');
 }
 
-function setFilterSuggestionList(listId, values) {
-  const el = document.getElementById(listId);
+window._filterOptionMaster = window._filterOptionMaster || {};
+
+function setFilterOptions(selectId, values) {
+  const el = document.getElementById(selectId);
   if (!el) return;
-  const uniq = [...new Set(values.filter(v => String(v ?? '').trim() !== '').map(v => String(v).trim()))].sort((a,b)=>a.localeCompare(b));
-  el.innerHTML = uniq.map(v => `<option value="${escHtml(v)}"></option>`).join('');
+  const cur = el.value;
+  const uniq = [...new Set(values.filter(v => String(v ?? '').trim() !== '').map(v => String(v).trim()))]
+    .sort((a,b)=>a.localeCompare(b));
+  window._filterOptionMaster[selectId] = uniq;
+  el.innerHTML = '<option value="">Semua</option>' +
+    uniq.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+  if (cur && uniq.includes(cur)) el.value = cur;
+}
+
+function filterSelectOptions(selectId, keyword) {
+  const el = document.getElementById(selectId);
+  if (!el) return;
+  const cur = el.value;
+  const q = String(keyword || '').toLowerCase();
+  const all = window._filterOptionMaster[selectId] || [];
+  const subset = q ? all.filter(v => String(v).toLowerCase().includes(q)) : all;
+  el.innerHTML = '<option value="">Semua</option>' +
+    subset.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+  if (cur && subset.includes(cur)) el.value = cur;
 }
 
 function saveState() {
@@ -2005,8 +2027,8 @@ function renderDbLine() {
     return `<span class="badge badge-blue">${l}: ${cnt} item</span>`;
   }).join('');
 
-  // populate filter suggestion
-  setFilterSuggestionList('fl-line-line-list', lines);
+  // populate filter dropdown
+  setFilterOptions('fl-line-line', lines);
 
   window._dbLineData = data;
   applyDbLineFilter();
@@ -2015,7 +2037,7 @@ function renderDbLine() {
 function applyDbLineFilter() {
   const data = window._dbLineData || state.dbLine;
   const lineF = document.getElementById('fl-line-line')?.value || '';
-  const prefixF = document.getElementById('fl-line-prefix')?.value || '';
+  const prefixF = (document.getElementById('fl-line-prefix')?.value || '').toLowerCase();
 
   const hasFilter = !!lineF || !!prefixF;
 
@@ -2024,8 +2046,8 @@ function applyDbLineFilter() {
   document.getElementById('fl-line-prefix')?.classList.toggle('has-filter', !!prefixF);
 
   const filtered = data.filter(d =>
-    containsTxt(d.line, lineF) &&
-    containsTxt(d.prefix, prefixF)
+    (!lineF || d.line === lineF) &&
+    (!prefixF || d.prefix.toLowerCase().includes(prefixF))
   );
 
   // show/hide reset button and count
@@ -2048,8 +2070,11 @@ function applyDbLineFilter() {
 function resetDbLineFilter() {
   const sel = document.getElementById('fl-line-line');
   const inp = document.getElementById('fl-line-prefix');
+  const srch = document.getElementById('fls-line-line');
   if (sel) sel.value = '';
   if (inp) inp.value = '';
+  if (srch) srch.value = '';
+  filterSelectOptions('fl-line-line', '');
   applyDbLineFilter();
 }
 
@@ -2175,15 +2200,15 @@ function renderDbPCS() {
   if (!data.length) { empty.style.display=''; wrap.style.display='none'; return; }
   empty.style.display='none'; wrap.style.display='';
 
-  // populate all filter suggestion lists
-  setFilterSuggestionList('fp-technology-list', data.map(d=>d.technology));
-  setFilterSuggestionList('fp-group-list', data.map(d=>d.group));
-  setFilterSuggestionList('fp-batterytype-list', data.map(d=>d.batteryType));
-  setFilterSuggestionList('fp-plate-list', data.map(d=>d.plate));
-  setFilterSuggestionList('fp-separator-list', data.map(d=>d.separator));
-  setFilterSuggestionList('fp-spacer-list', data.map(d=>d.spacer||'-'));
-  setFilterSuggestionList('fp-line1-list', data.map(d=>d.line1));
-  setFilterSuggestionList('fp-line2-list', data.map(d=>d.line2).filter(Boolean));
+  // populate all filter dropdowns with unique values
+  setFilterOptions('fp-technology', data.map(d=>d.technology));
+  setFilterOptions('fp-group', data.map(d=>d.group));
+  setFilterOptions('fp-batterytype', data.map(d=>d.batteryType));
+  setFilterOptions('fp-plate', data.map(d=>d.plate));
+  setFilterOptions('fp-separator', data.map(d=>d.separator));
+  setFilterOptions('fp-spacer', data.map(d=>d.spacer||'-'));
+  setFilterOptions('fp-line1', data.map(d=>d.line1));
+  setFilterOptions('fp-line2', data.map(d=>d.line2).filter(Boolean));
 
   window._dbPCSData = data;
   applyPCSFilter();
@@ -2209,14 +2234,14 @@ function applyPCSFilter() {
   }).forEach(([id,val])=>document.getElementById(id)?.classList.toggle('has-filter',!!val));
 
   const filtered = data.filter(d =>
-    containsTxt(d.technology, f.tech) &&
-    containsTxt(d.group, f.group) &&
-    containsTxt(d.batteryType, f.btype) &&
-    containsTxt(d.plate, f.plate) &&
-    containsTxt(d.separator, f.sep) &&
-    containsTxt(d.spacer||'-', f.spacer) &&
-    containsTxt(d.line1, f.line1) &&
-    containsTxt(d.line2, f.line2)
+    (!f.tech   || d.technology === f.tech) &&
+    (!f.group  || d.group === f.group) &&
+    (!f.btype  || d.batteryType === f.btype) &&
+    (!f.plate  || String(d.plate) === f.plate) &&
+    (!f.sep    || d.separator === f.sep) &&
+    (!f.spacer || (d.spacer||'-') === f.spacer) &&
+    (!f.line1  || d.line1 === f.line1) &&
+    (!f.line2  || d.line2 === f.line2)
   );
 
   // show/hide reset button and count
@@ -2262,6 +2287,10 @@ function applyPCSFilter() {
 function resetPCSFilter() {
   ['fp-technology','fp-group','fp-batterytype','fp-plate','fp-separator','fp-spacer','fp-line1','fp-line2']
     .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['fps-technology','fps-group','fps-batterytype','fps-plate','fps-separator','fps-spacer','fps-line1','fps-line2']
+    .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['fp-technology','fp-group','fp-batterytype','fp-plate','fp-separator','fp-spacer','fp-line1','fp-line2']
+    .forEach(id => filterSelectOptions(id, ''));
   applyPCSFilter();
 }
 
@@ -2441,13 +2470,13 @@ function renderOrderList() {
   // store for search + filter
   window._currentOrderData = enriched;
 
-  // populate filter suggestion lists
-  setFilterSuggestionList('fo-customer-list', enriched.map(o=>o.customer));
-  setFilterSuggestionList('fo-line-list', enriched.map(o=>o.lineAssigned||'Unmapped'));
-  setFilterSuggestionList('fo-tech-list', enriched.map(o=>o.specs.technology).filter(Boolean));
-  setFilterSuggestionList('fo-plate-list', enriched.map(o=>o.specs.plate).filter(Boolean));
-  setFilterSuggestionList('fo-sep-list', enriched.map(o=>o.specs.separator).filter(Boolean));
-  setFilterSuggestionList('fo-batttype-list', enriched.map(o=>o.specs.batteryType).filter(Boolean));
+  // populate filter dropdowns
+  setFilterOptions('fo-customer', enriched.map(o=>o.customer));
+  setFilterOptions('fo-line', enriched.map(o=>o.lineAssigned||'Unmapped'));
+  setFilterOptions('fo-tech', enriched.map(o=>o.specs.technology).filter(Boolean));
+  setFilterOptions('fo-plate', enriched.map(o=>o.specs.plate).filter(Boolean));
+  setFilterOptions('fo-sep', enriched.map(o=>o.specs.separator).filter(Boolean));
+  setFilterOptions('fo-batttype', enriched.map(o=>o.specs.batteryType).filter(Boolean));
 
   applyOrderFilter();
 }
@@ -2461,8 +2490,9 @@ function applyOrderFilter() {
   const plateF   = document.getElementById('fo-plate')?.value || '';
   const sepF     = document.getElementById('fo-sep')?.value || '';
   const btF      = document.getElementById('fo-batttype')?.value || '';
+  const searchQ  = (document.getElementById('search-order')?.value || '').toLowerCase();
 
-  const hasFilter = !!(itemF || custF || lineF || techF || plateF || sepF || btF);
+  const hasFilter = !!(itemF || custF || lineF || techF || plateF || sepF || btF || searchQ);
 
   // active indicators
   ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => {
@@ -2472,15 +2502,16 @@ function applyOrderFilter() {
 
   const filtered = data.filter(o => {
     if (itemF   && !o.item.toLowerCase().includes(itemF)) return false;
-    if (!containsTxt(o.customer, custF)) return false;
+    if (searchQ && !o.item.toLowerCase().includes(searchQ) && !o.customer.toLowerCase().includes(searchQ)) return false;
+    if (custF   && o.customer !== custF) return false;
     if (lineF) {
       const assigned = o.lineAssigned || 'Unmapped';
-      if (!containsTxt(assigned, lineF)) return false;
+      if (assigned !== lineF) return false;
     }
-    if (!containsTxt(o.specs.batteryType, btF)) return false;
-    if (!containsTxt(o.specs.technology, techF)) return false;
-    if (!containsTxt(o.specs.plate, plateF)) return false;
-    if (!containsTxt(o.specs.separator, sepF)) return false;
+    if (btF   && o.specs.batteryType !== btF) return false;
+    if (techF && o.specs.technology !== techF) return false;
+    if (plateF && String(o.specs.plate) !== plateF) return false;
+    if (sepF  && o.specs.separator !== sepF) return false;
     return true;
   });
 
@@ -2535,6 +2566,13 @@ function resetOrderFilter() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
+  ['fos-customer','fos-line','fos-tech','fos-plate','fos-sep','fos-batttype'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  ['fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => filterSelectOptions(id, ''));
+  const searchEl = document.getElementById('search-order');
+  if (searchEl) searchEl.value = '';
   applyOrderFilter();
 }
 
