@@ -705,33 +705,17 @@
   /* FROZEN HEADER */
   .table-frozen thead th {
     position: sticky;
-    top: 0;
-    z-index: 3;
+    top: 0; /* will be recalculated by JS per row */
+    z-index: 6;
     background: var(--surface2);
-    box-shadow: 0 1px 0 var(--border);
-  }
-  /* second header row sticky (for 2-row headers like PCS) */
-  .table-frozen thead tr:nth-child(2) th {
-    top: 38px;
     box-shadow: 0 1px 0 var(--border);
   }
   /* COLUMN FILTER ROW */
   .filter-row th {
     padding: 4px 6px !important;
   }
-  /* filter row: 2-row header tables — filter is 3rd row */
-  .table-frozen thead tr:nth-child(3) th {
-    top: 76px;
-    z-index: 3;
-    background: var(--surface3);
-    box-shadow: 0 1px 0 var(--border);
-  }
-  /* filter row: 1-row header tables — filter is 2nd row */
-  .table-frozen.single-header thead tr:nth-child(2) th {
-    top: 38px;
-    z-index: 3;
+  .table-frozen thead tr.filter-row th {
     background: var(--surface3) !important;
-    box-shadow: 0 1px 0 var(--border);
   }
 
   .col-filter {
@@ -1957,6 +1941,7 @@ window.addEventListener('resize', () => {
       if (spacer) spacer.classList.add('collapsed');
     }
   }
+  syncFrozenTableHeaders();
 });
 
 function openMobileSidebar() {
@@ -1984,6 +1969,23 @@ function injectHamburgers() {
   });
 }
 
+function syncFrozenTableHeaders() {
+  document.querySelectorAll('.table-frozen').forEach(table => {
+    const thead = table.querySelector('thead');
+    if (!thead) return;
+    const rows = [...thead.querySelectorAll('tr')];
+    let topOffset = 0;
+    rows.forEach((row, rowIdx) => {
+      const rowHeight = row.getBoundingClientRect().height || 0;
+      row.querySelectorAll('th').forEach(th => {
+        th.style.top = `${topOffset}px`;
+        th.style.zIndex = String(10 - rowIdx);
+      });
+      topOffset += rowHeight;
+    });
+  });
+}
+
 // Close mobile sidebar when navigating
 const _origShowPage = typeof showPage === 'function' ? showPage : null;
 function showPage(id) {
@@ -1999,6 +2001,7 @@ function showPage(id) {
   if (id === 'lvc') refreshLVCPeriods();
   if (id === 'capacity') refreshCapPeriods();
   if (id === 'mp') refreshMPPage();
+  setTimeout(syncFrozenTableHeaders, 0);
 }
 
 // ============================================================
@@ -2246,6 +2249,7 @@ function renderDbLine() {
 
   window._dbLineData = data;
   applyDbLineFilter();
+  setTimeout(syncFrozenTableHeaders, 0);
 }
 
 function applyDbLineFilter() {
@@ -2422,6 +2426,7 @@ function renderDbPCS() {
 
   window._dbPCSData = data;
   applyPCSFilter();
+  setTimeout(syncFrozenTableHeaders, 0);
 }
 
 function applyPCSFilter() {
@@ -2672,6 +2677,7 @@ function renderOrderList() {
   setFilterOptions('fo-batttype', enriched.map(o=>o.specs.batteryType).filter(Boolean));
 
   applyOrderFilter();
+  setTimeout(syncFrozenTableHeaders, 0);
 }
 
 function applyOrderFilter() {
