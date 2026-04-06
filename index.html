@@ -763,6 +763,74 @@
   }
   .col-filter-search:focus { border-color: var(--accent); color: var(--text2); }
 
+  .excel-filter-anchor { position: relative; }
+  .excel-filter-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    padding: 3px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-family: var(--mono);
+    text-align: left;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+  .excel-filter-btn.has-filter {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-dim2);
+  }
+  .excel-filter-btn-caret { opacity: 0.8; font-size: 10px; }
+  .excel-filter-pop {
+    position: fixed;
+    width: 300px;
+    max-width: calc(100vw - 20px);
+    background: #f2f2f2;
+    border: 1px solid #9a9a9a;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    z-index: 10000;
+    color: #111;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    display: none;
+  }
+  .excel-filter-head { padding: 8px; border-bottom: 1px solid #b8b8b8; background: #ececec; }
+  .excel-filter-searchbox {
+    width: 100%;
+    border: 1px solid #9f9f9f;
+    height: 30px;
+    padding: 4px 34px 4px 8px;
+    outline: none;
+    font-size: 14px;
+    background: #fff;
+  }
+  .excel-filter-searchwrap { position: relative; }
+  .excel-filter-searchicon {
+    position: absolute; right: 8px; top: 6px; color: #1f6fb2; font-size: 17px; pointer-events: none;
+  }
+  .excel-filter-list {
+    max-height: 250px;
+    overflow: auto;
+    background: #fff;
+    border-top: 1px solid #d0d0d0;
+    border-bottom: 1px solid #d0d0d0;
+    padding: 4px 0;
+  }
+  .excel-filter-item { display: flex; align-items: center; gap: 6px; padding: 4px 8px; }
+  .excel-filter-item:hover { background: #eef5ff; }
+  .excel-filter-item input { margin: 0; }
+  .excel-filter-foot {
+    display: flex; justify-content: flex-end; gap: 6px; padding: 8px; background: #ececec;
+  }
+  .excel-filter-foot button {
+    border: 1px solid #9f9f9f; background: #fff; padding: 4px 10px; cursor: pointer;
+  }
+
   /* filter active indicator */
   .col-filter.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim2); }
 
@@ -1074,8 +1142,12 @@
                   <tr class="filter-row">
                     <th></th>
                     <th>
-                      <select class="col-filter" id="fl-line-line" onchange="applyDbLineFilter()"><option value="">Semua</option></select>
-                      <input class="col-filter-search" id="fls-line-line" placeholder="Cari opsi LINE..." oninput="filterSelectOptions('fl-line-line', this.value)">
+                      <select class="col-filter" id="fl-line-line" onchange="applyDbLineFilter()" style="display:none"><option value="">Semua</option></select>
+                      <div class="excel-filter-anchor">
+                        <button class="excel-filter-btn" id="btn-fl-line-line" onclick="openExcelFilter('fl-line-line', event)" type="button">
+                          <span>Semua</span><span class="excel-filter-btn-caret">▼</span>
+                        </button>
+                      </div>
                     </th>
                     <th><input class="col-filter" id="fl-line-prefix" placeholder="Cari prefix..." oninput="applyDbLineFilter()"></th>
                     <th></th>
@@ -1168,15 +1240,15 @@
                   </tr>
                   <tr class="filter-row">
                     <th></th>
-                    <th><select class="col-filter" id="fp-technology" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-technology" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-technology', this.value)"></th>
-                    <th><select class="col-filter" id="fp-group" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-group" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-group', this.value)"></th>
-                    <th><select class="col-filter" id="fp-batterytype" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-batterytype" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-batterytype', this.value)"></th>
-                    <th><select class="col-filter" id="fp-plate" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-plate" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-plate', this.value)"></th>
-                    <th><select class="col-filter" id="fp-separator" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-separator" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-separator', this.value)"></th>
-                    <th><select class="col-filter" id="fp-spacer" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-spacer" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-spacer', this.value)"></th>
-                    <th><select class="col-filter" id="fp-line1" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-line1" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-line1', this.value)"></th>
+                    <th><select class="col-filter" id="fp-technology" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-technology" onclick="openExcelFilter('fp-technology', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fp-group" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-group" onclick="openExcelFilter('fp-group', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fp-batterytype" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-batterytype" onclick="openExcelFilter('fp-batterytype', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fp-plate" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-plate" onclick="openExcelFilter('fp-plate', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fp-separator" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-separator" onclick="openExcelFilter('fp-separator', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fp-spacer" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-spacer" onclick="openExcelFilter('fp-spacer', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fp-line1" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-line1" onclick="openExcelFilter('fp-line1', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th colspan="6"></th>
-                    <th><select class="col-filter" id="fp-line2" onchange="applyPCSFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fps-line2" placeholder="Cari opsi..." oninput="filterSelectOptions('fp-line2', this.value)"></th>
+                    <th><select class="col-filter" id="fp-line2" onchange="applyPCSFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fp-line2" onclick="openExcelFilter('fp-line2', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th colspan="6"></th>
                   </tr>
                 </thead>
@@ -1328,13 +1400,13 @@
                     <th></th>
                     <th><input class="col-filter" id="fo-item" placeholder="Cari ITEM..." oninput="applyOrderFilter()"></th>
                     <th></th>
-                    <th><select class="col-filter" id="fo-customer" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-customer" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-customer', this.value)"></th>
+                    <th><select class="col-filter" id="fo-customer" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-customer" onclick="openExcelFilter('fo-customer', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th></th>
-                    <th><select class="col-filter" id="fo-batttype" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-batttype" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-batttype', this.value)"></th>
-                    <th><select class="col-filter" id="fo-tech" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-tech" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-tech', this.value)"></th>
-                    <th><select class="col-filter" id="fo-plate" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-plate" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-plate', this.value)"></th>
-                    <th><select class="col-filter" id="fo-sep" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-sep" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-sep', this.value)"></th>
-                    <th><select class="col-filter" id="fo-line" onchange="applyOrderFilter()"><option value="">Semua</option></select><input class="col-filter-search" id="fos-line" placeholder="Cari opsi..." oninput="filterSelectOptions('fo-line', this.value)"></th>
+                    <th><select class="col-filter" id="fo-batttype" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-batttype" onclick="openExcelFilter('fo-batttype', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fo-tech" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-tech" onclick="openExcelFilter('fo-tech', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fo-plate" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-plate" onclick="openExcelFilter('fo-plate', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fo-sep" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-sep" onclick="openExcelFilter('fo-sep', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
+                    <th><select class="col-filter" id="fo-line" onchange="applyOrderFilter()" style="display:none"><option value="">Semua</option></select><button class="excel-filter-btn" id="btn-fo-line" onclick="openExcelFilter('fo-line', event)" type="button"><span>Semua</span><span class="excel-filter-btn-caret">▼</span></button></th>
                     <th></th><th></th><th></th>
                   </tr>
                 </thead>
@@ -1540,6 +1612,18 @@
 
 <!-- TOAST CONTAINER -->
 <div class="toast-container" id="toast-container"></div>
+<div class="excel-filter-pop" id="excel-filter-pop">
+  <div class="excel-filter-head">
+    <div class="excel-filter-searchwrap">
+      <input id="excel-filter-search" class="excel-filter-searchbox" placeholder="Search" oninput="renderExcelFilterList()">
+      <span class="excel-filter-searchicon">🔎</span>
+    </div>
+  </div>
+  <div class="excel-filter-list" id="excel-filter-list"></div>
+  <div class="excel-filter-foot">
+    <button type="button" onclick="closeExcelFilter()">Close</button>
+  </div>
+</div>
 
 <script>
 // ============================================================
@@ -1589,30 +1673,160 @@ function escHtml(s) {
 }
 
 window._filterOptionMaster = window._filterOptionMaster || {};
+window._multiFilterState = window._multiFilterState || {};
+window._excelFilter = window._excelFilter || { activeSelectId: null };
 
 function setFilterOptions(selectId, values) {
   const el = document.getElementById(selectId);
   if (!el) return;
-  const cur = el.value;
   const uniq = [...new Set(values.filter(v => String(v ?? '').trim() !== '').map(v => String(v).trim()))]
     .sort((a,b)=>a.localeCompare(b));
   window._filterOptionMaster[selectId] = uniq;
+
+  // Keep prior selection if possible; default = select all.
+  const prev = Array.isArray(window._multiFilterState[selectId]) ? window._multiFilterState[selectId] : null;
+  window._multiFilterState[selectId] = prev ? prev.filter(v => uniq.includes(v)) : uniq.slice();
+
   el.innerHTML = '<option value="">Semua</option>' +
     uniq.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
-  if (cur && uniq.includes(cur)) el.value = cur;
+  syncExcelFilterButton(selectId);
 }
 
-function filterSelectOptions(selectId, keyword) {
-  const el = document.getElementById(selectId);
-  if (!el) return;
-  const cur = el.value;
-  const q = String(keyword || '').toLowerCase();
+function getSelectedValues(selectId) {
   const all = window._filterOptionMaster[selectId] || [];
-  const subset = q ? all.filter(v => String(v).toLowerCase().includes(q)) : all;
-  el.innerHTML = '<option value="">Semua</option>' +
-    subset.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
-  if (cur && subset.includes(cur)) el.value = cur;
+  const selected = Array.isArray(window._multiFilterState[selectId]) ? window._multiFilterState[selectId] : all.slice();
+  return selected.filter(v => all.includes(v));
 }
+
+function hasActiveExcelFilter(selectId) {
+  const all = window._filterOptionMaster[selectId] || [];
+  const selected = getSelectedValues(selectId);
+  return all.length > 0 && selected.length !== all.length;
+}
+
+function isAllowedByExcelFilter(selectId, value) {
+  const all = window._filterOptionMaster[selectId] || [];
+  if (!all.length) return true;
+  const selected = getSelectedValues(selectId);
+  if (selected.length === all.length) return true;
+  return selected.includes(String(value ?? '').trim());
+}
+
+function syncExcelFilterButton(selectId) {
+  const btn = document.getElementById(`btn-${selectId}`);
+  if (!btn) return;
+  const textEl = btn.querySelector('span');
+  const all = window._filterOptionMaster[selectId] || [];
+  const selected = getSelectedValues(selectId);
+  let label = 'Semua';
+  if (selected.length === 0) label = '(Kosong)';
+  else if (selected.length === 1) label = selected[0];
+  else if (selected.length !== all.length) label = `${selected.length} dipilih`;
+  if (textEl) textEl.textContent = label;
+  btn.classList.toggle('has-filter', hasActiveExcelFilter(selectId));
+}
+
+function applyFilterBySelectId(selectId) {
+  if (selectId === 'fl-line-line') applyDbLineFilter();
+  else if (selectId.startsWith('fp-')) applyPCSFilter();
+  else if (selectId.startsWith('fo-')) applyOrderFilter();
+}
+
+function resetExcelFilterSelection(selectId) {
+  const all = window._filterOptionMaster[selectId] || [];
+  window._multiFilterState[selectId] = all.slice();
+  syncExcelFilterButton(selectId);
+}
+
+function openExcelFilter(selectId, event) {
+  if (event) event.stopPropagation();
+  const pop = document.getElementById('excel-filter-pop');
+  const search = document.getElementById('excel-filter-search');
+  if (!pop || !search) return;
+
+  window._excelFilter.activeSelectId = selectId;
+  search.value = '';
+  renderExcelFilterList();
+
+  const btn = document.getElementById(`btn-${selectId}`);
+  const r = btn ? btn.getBoundingClientRect() : { left: 16, bottom: 40 };
+  const left = Math.max(8, Math.min(window.innerWidth - 308, r.left));
+  let top = Math.max(8, r.bottom + 4);
+  if (top + 360 > window.innerHeight) top = Math.max(8, r.top - 364);
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+  pop.style.display = 'block';
+  search.focus();
+}
+
+function closeExcelFilter() {
+  const pop = document.getElementById('excel-filter-pop');
+  if (!pop) return;
+  pop.style.display = 'none';
+  window._excelFilter.activeSelectId = null;
+}
+
+function renderExcelFilterList() {
+  const selectId = window._excelFilter.activeSelectId;
+  const listEl = document.getElementById('excel-filter-list');
+  const searchEl = document.getElementById('excel-filter-search');
+  if (!selectId || !listEl) return;
+
+  const keyword = (searchEl?.value || '').toLowerCase();
+  const all = window._filterOptionMaster[selectId] || [];
+  const selectedSet = new Set(getSelectedValues(selectId));
+  const show = keyword ? all.filter(v => v.toLowerCase().includes(keyword)) : all;
+
+  listEl.innerHTML = '';
+
+  const mkItem = (label, checked, onToggle, bold=false) => {
+    const row = document.createElement('label');
+    row.className = 'excel-filter-item';
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = checked;
+    cb.onchange = () => onToggle(cb.checked);
+    const sp = document.createElement('span');
+    sp.textContent = label;
+    if (bold) sp.style.fontWeight = '600';
+    row.appendChild(cb);
+    row.appendChild(sp);
+    return row;
+  };
+
+  const allChecked = selectedSet.size === all.length && all.length > 0;
+  listEl.appendChild(mkItem('(Select All)', allChecked, (checked) => {
+    window._multiFilterState[selectId] = checked ? all.slice() : [];
+    syncExcelFilterButton(selectId);
+    renderExcelFilterList();
+    applyFilterBySelectId(selectId);
+  }, true));
+
+  show.forEach(v => {
+    listEl.appendChild(mkItem(v, selectedSet.has(v), (checked) => {
+      const cur = new Set(getSelectedValues(selectId));
+      if (checked) cur.add(v); else cur.delete(v);
+      window._multiFilterState[selectId] = [...cur];
+      syncExcelFilterButton(selectId);
+      renderExcelFilterList();
+      applyFilterBySelectId(selectId);
+    }));
+  });
+}
+
+document.addEventListener('click', (e) => {
+  const pop = document.getElementById('excel-filter-pop');
+  if (!pop || pop.style.display === 'none') return;
+  const target = e.target;
+  const isInsideBtn = target && target.closest && target.closest('.excel-filter-btn');
+  if (target && pop.contains(target)) return;
+  if (isInsideBtn) return;
+  closeExcelFilter();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeExcelFilter();
+});
 
 function saveState() {
   try {
@@ -2036,17 +2250,17 @@ function renderDbLine() {
 
 function applyDbLineFilter() {
   const data = window._dbLineData || state.dbLine;
-  const lineF = document.getElementById('fl-line-line')?.value || '';
   const prefixF = (document.getElementById('fl-line-prefix')?.value || '').toLowerCase();
 
-  const hasFilter = !!lineF || !!prefixF;
+  const lineHasFilter = hasActiveExcelFilter('fl-line-line');
+  const hasFilter = lineHasFilter || !!prefixF;
 
   // update filter active indicator
-  document.getElementById('fl-line-line')?.classList.toggle('has-filter', !!lineF);
+  syncExcelFilterButton('fl-line-line');
   document.getElementById('fl-line-prefix')?.classList.toggle('has-filter', !!prefixF);
 
   const filtered = data.filter(d =>
-    (!lineF || d.line === lineF) &&
+    isAllowedByExcelFilter('fl-line-line', d.line) &&
     (!prefixF || d.prefix.toLowerCase().includes(prefixF))
   );
 
@@ -2068,13 +2282,9 @@ function applyDbLineFilter() {
 }
 
 function resetDbLineFilter() {
-  const sel = document.getElementById('fl-line-line');
   const inp = document.getElementById('fl-line-prefix');
-  const srch = document.getElementById('fls-line-line');
-  if (sel) sel.value = '';
   if (inp) inp.value = '';
-  if (srch) srch.value = '';
-  filterSelectOptions('fl-line-line', '');
+  resetExcelFilterSelection('fl-line-line');
   applyDbLineFilter();
 }
 
@@ -2216,32 +2426,19 @@ function renderDbPCS() {
 
 function applyPCSFilter() {
   const data = window._dbPCSData || state.dbPCS;
-  const fv = (id) => document.getElementById(id)?.value || '';
-  const f = {
-    tech: fv('fp-technology'), group: fv('fp-group'),
-    btype: fv('fp-batterytype'), plate: fv('fp-plate'),
-    sep: fv('fp-separator'), spacer: fv('fp-spacer'),
-    line1: fv('fp-line1'), line2: fv('fp-line2'),
-  };
-
-  const hasFilter = Object.values(f).some(v => !!v);
-
-  // update active indicators
-  Object.entries({
-    'fp-technology':f.tech,'fp-group':f.group,'fp-batterytype':f.btype,
-    'fp-plate':f.plate,'fp-separator':f.sep,'fp-spacer':f.spacer,
-    'fp-line1':f.line1,'fp-line2':f.line2
-  }).forEach(([id,val])=>document.getElementById(id)?.classList.toggle('has-filter',!!val));
+  const filterIds = ['fp-technology','fp-group','fp-batterytype','fp-plate','fp-separator','fp-spacer','fp-line1','fp-line2'];
+  const hasFilter = filterIds.some(id => hasActiveExcelFilter(id));
+  filterIds.forEach(id => syncExcelFilterButton(id));
 
   const filtered = data.filter(d =>
-    (!f.tech   || d.technology === f.tech) &&
-    (!f.group  || d.group === f.group) &&
-    (!f.btype  || d.batteryType === f.btype) &&
-    (!f.plate  || String(d.plate) === f.plate) &&
-    (!f.sep    || d.separator === f.sep) &&
-    (!f.spacer || (d.spacer||'-') === f.spacer) &&
-    (!f.line1  || d.line1 === f.line1) &&
-    (!f.line2  || d.line2 === f.line2)
+    isAllowedByExcelFilter('fp-technology', d.technology) &&
+    isAllowedByExcelFilter('fp-group', d.group) &&
+    isAllowedByExcelFilter('fp-batterytype', d.batteryType) &&
+    isAllowedByExcelFilter('fp-plate', String(d.plate)) &&
+    isAllowedByExcelFilter('fp-separator', d.separator) &&
+    isAllowedByExcelFilter('fp-spacer', (d.spacer||'-')) &&
+    isAllowedByExcelFilter('fp-line1', d.line1) &&
+    isAllowedByExcelFilter('fp-line2', d.line2)
   );
 
   // show/hide reset button and count
@@ -2286,11 +2483,7 @@ function applyPCSFilter() {
 
 function resetPCSFilter() {
   ['fp-technology','fp-group','fp-batterytype','fp-plate','fp-separator','fp-spacer','fp-line1','fp-line2']
-    .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['fps-technology','fps-group','fps-batterytype','fps-plate','fps-separator','fps-spacer','fps-line1','fps-line2']
-    .forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
-  ['fp-technology','fp-group','fp-batterytype','fp-plate','fp-separator','fp-spacer','fp-line1','fp-line2']
-    .forEach(id => filterSelectOptions(id, ''));
+    .forEach(id => resetExcelFilterSelection(id));
   applyPCSFilter();
 }
 
@@ -2484,34 +2677,24 @@ function renderOrderList() {
 function applyOrderFilter() {
   const data = window._currentOrderData || [];
   const itemF    = (document.getElementById('fo-item')?.value || '').toLowerCase();
-  const custF    = document.getElementById('fo-customer')?.value || '';
-  const lineF    = document.getElementById('fo-line')?.value || '';
-  const techF    = document.getElementById('fo-tech')?.value || '';
-  const plateF   = document.getElementById('fo-plate')?.value || '';
-  const sepF     = document.getElementById('fo-sep')?.value || '';
-  const btF      = document.getElementById('fo-batttype')?.value || '';
   const searchQ  = (document.getElementById('search-order')?.value || '').toLowerCase();
-
-  const hasFilter = !!(itemF || custF || lineF || techF || plateF || sepF || btF || searchQ);
+  const dropdownIds = ['fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'];
+  const hasDropdownFilter = dropdownIds.some(id => hasActiveExcelFilter(id));
+  const hasFilter = !!(itemF || searchQ || hasDropdownFilter);
 
   // active indicators
-  ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.toggle('has-filter', !!el.value);
-  });
+  document.getElementById('fo-item')?.classList.toggle('has-filter', !!itemF);
+  dropdownIds.forEach(id => syncExcelFilterButton(id));
 
   const filtered = data.filter(o => {
     if (itemF   && !o.item.toLowerCase().includes(itemF)) return false;
     if (searchQ && !o.item.toLowerCase().includes(searchQ) && !o.customer.toLowerCase().includes(searchQ)) return false;
-    if (custF   && o.customer !== custF) return false;
-    if (lineF) {
-      const assigned = o.lineAssigned || 'Unmapped';
-      if (assigned !== lineF) return false;
-    }
-    if (btF   && o.specs.batteryType !== btF) return false;
-    if (techF && o.specs.technology !== techF) return false;
-    if (plateF && String(o.specs.plate) !== plateF) return false;
-    if (sepF  && o.specs.separator !== sepF) return false;
+    if (!isAllowedByExcelFilter('fo-customer', o.customer)) return false;
+    if (!isAllowedByExcelFilter('fo-line', o.lineAssigned || 'Unmapped')) return false;
+    if (!isAllowedByExcelFilter('fo-batttype', o.specs.batteryType)) return false;
+    if (!isAllowedByExcelFilter('fo-tech', o.specs.technology)) return false;
+    if (!isAllowedByExcelFilter('fo-plate', String(o.specs.plate))) return false;
+    if (!isAllowedByExcelFilter('fo-sep', o.specs.separator)) return false;
     return true;
   });
 
@@ -2562,15 +2745,11 @@ function applyOrderFilter() {
 }
 
 function resetOrderFilter() {
-  ['fo-item','fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => {
+  ['fo-item'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  ['fos-customer','fos-line','fos-tech','fos-plate','fos-sep','fos-batttype'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-  ['fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => filterSelectOptions(id, ''));
+  ['fo-customer','fo-line','fo-tech','fo-plate','fo-sep','fo-batttype'].forEach(id => resetExcelFilterSelection(id));
   const searchEl = document.getElementById('search-order');
   if (searchEl) searchEl.value = '';
   applyOrderFilter();
