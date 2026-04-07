@@ -2396,8 +2396,9 @@ function ensureLineProcessData() {
 
 function getLineProcessSummary(line) {
   const rows = state.lineProcessData?.[line] || [];
-  const totalProc = rows.length;
-  const totalMP = rows.reduce((s, r) => s + (parseInt(r.mp) || 0), 0);
+  const activeRows = rows.filter(r => !!r.active);
+  const totalProc = activeRows.length;
+  const totalMP = activeRows.reduce((s, r) => s + (parseInt(r.mp) || 0), 0);
   return { totalProc, totalMP };
 }
 
@@ -2449,7 +2450,7 @@ function renderDbLine() {
           <div class="table-wrap" style="margin:8px 0 2px 0">
             <table>
               <thead>
-                <tr><th style="width:52px">#</th><th>Nama Proses</th><th style="width:95px">MP</th><th style="width:120px">Cycle Time (sec)</th><th style="width:110px">ON/OFF</th></tr>
+                <tr><th style="width:52px">#</th><th>Nama Proses</th><th style="width:95px">MP</th><th style="width:120px">Cycle Time (sec)</th><th style="width:110px">STATUS</th></tr>
               </thead>
               <tbody>
                 ${rows.map((r, idx) => `
