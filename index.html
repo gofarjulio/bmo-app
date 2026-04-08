@@ -874,8 +874,8 @@
   }
   .workcal-grid {
     display: grid;
-    grid-template-columns: repeat(7, minmax(34px, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(7, minmax(48px, 1fr));
+    gap: 8px;
     width: 100%;
   }
   .workcal-layout {
@@ -892,51 +892,194 @@
     color: var(--text3);
     text-align: center;
     font-family: var(--mono);
-    padding: 4px 0;
+    padding: 3px 0 4px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: 0.4px;
   }
   .workcal-cell {
-    height: 34px;
+    min-height: 54px;
     border: 1px solid var(--border2);
-    border-radius: 6px;
+    border-radius: 10px;
     background: var(--surface2);
     color: var(--text2);
     cursor: pointer;
     font-family: var(--mono);
     font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px 6px 5px;
+    text-align: left;
+    position: relative;
+    transition: transform 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+  }
+  .workcal-cell:hover {
+    transform: translateY(-1px);
+    border-color: #3c4e6a;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.24);
+  }
+  .workcal-day-num {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1;
+    letter-spacing: -0.1px;
+    color: #d6e4fb;
   }
   .workcal-cell.off {
-    background: var(--surface);
-    color: var(--text3);
+    background: linear-gradient(180deg, #141c28 0%, #111824 100%);
+    border-color: #2d3a50;
+  }
+  .workcal-cell.off .workcal-day-num {
+    color: #95a8c8;
   }
   .workcal-cell.on {
-    background: var(--green-dim);
-    color: var(--green);
-    border-color: rgba(0,230,118,0.35);
+    background: linear-gradient(180deg, rgba(0,230,118,0.14) 0%, rgba(0,230,118,0.08) 100%);
+    border-color: rgba(0,230,118,0.42);
+  }
+  .workcal-cell.on .workcal-day-num {
+    color: #dfffe9;
   }
   .workcal-cell.weekend {
     border-style: dashed;
   }
-  .workcal-cell.evt-national { background:#123e69; color:#79c6ff; border-color:#2f6ea3; }
-  .workcal-cell.evt-cuti { background:#5e5700; color:#fff176; border-color:#9c9000; }
-  .workcal-cell.evt-libur-ganti { background:#6a2e14; color:#ffb087; border-color:#a94d24; }
-  .workcal-cell.evt-work-ganti { background:#0d4b2d; color:#8df0bc; border-color:#2f8f62; }
+  .workcal-cell.has-event::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 10px 0 0 10px;
+    background: var(--evt-color, #365274);
+  }
+  .workcal-cell.has-event::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--evt-color, #365274);
+    box-shadow: 0 0 0 2px rgba(9,16,28,0.8);
+  }
+  .workcal-cell.evt-national { --evt-color:#53b3ff; }
+  .workcal-cell.evt-cuti { --evt-color:#f0d73a; }
+  .workcal-cell.evt-libur-ganti { --evt-color:#ff9a57; }
+  .workcal-cell.evt-work-ganti { --evt-color:#4de39b; }
   .workcal-legend-pills { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
   .workcal-pill {
-    font-size:10px; padding:3px 8px; border-radius:999px; border:1px solid var(--border2); font-family:var(--mono);
+    font-size:10px;
+    padding:3px 8px;
+    border-radius:999px;
+    border:1px solid var(--border2);
+    font-family:var(--mono);
+  }
+  .workcal-pill.status-on {
+    color: #7df2b4;
+    background: rgba(0,230,118,0.15);
+    border-color: rgba(0,230,118,0.35);
+  }
+  .workcal-pill.status-off {
+    color: #ffb1b1;
+    background: rgba(255,82,82,0.12);
+    border-color: rgba(255,82,82,0.3);
   }
   .workcal-note-box {
-    background: var(--surface2);
+    background: linear-gradient(180deg, rgba(26,35,51,0.92) 0%, rgba(16,23,35,0.92) 100%);
     border: 1px solid var(--border);
-    border-radius: var(--radius2);
-    padding: 10px;
+    border-radius: 10px;
+    padding: 12px;
+    min-height: 100%;
   }
   .workcal-note-title { font-size:12px; color:var(--text2); font-weight:600; margin-bottom:8px; }
   .workcal-note-item {
-    font-size:11px; color:var(--text2); border-bottom:1px solid var(--border); padding:6px 0;
+    font-size:11px; color:var(--text2); border-bottom:1px solid var(--border); padding:7px 0;
     display:flex; gap:8px; align-items:flex-start;
   }
   .workcal-note-item:last-child { border-bottom:none; }
   .workcal-note-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; flex:0 0 auto; }
+  .workcal-note-state {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 9px;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 1px 6px;
+    border: 1px solid transparent;
+    line-height: 1.5;
+  }
+  .workcal-note-state.on {
+    color: #88ffc3;
+    border-color: rgba(0,230,118,0.35);
+    background: rgba(0,230,118,0.12);
+  }
+  .workcal-note-state.off {
+    color: #ffc4c4;
+    border-color: rgba(255,82,82,0.32);
+    background: rgba(255,82,82,0.1);
+  }
+
+  /* CAPACITY - LINE SHIFT SUMMARY */
+  .line-shift-hero {
+    background: linear-gradient(135deg, #13243a 0%, #0e3f58 52%, #13442f 100%);
+    border: 1px solid #28516a;
+    border-radius: 12px;
+    padding: 16px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: center;
+    overflow: hidden;
+    position: relative;
+  }
+  .line-shift-hero::after {
+    content: '';
+    position: absolute;
+    right: -28px;
+    top: -28px;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle at center, rgba(0,212,255,0.26) 0%, rgba(0,212,255,0.0) 70%);
+    pointer-events: none;
+  }
+  .line-shift-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    color: #8bd8ff;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .line-shift-value {
+    font-family: var(--mono);
+    font-size: 34px;
+    line-height: 1;
+    letter-spacing: -1px;
+    color: #e9f6ff;
+    font-weight: 700;
+  }
+  .line-shift-sub {
+    font-size: 11px;
+    color: #a6bfd4;
+    margin-top: 5px;
+  }
+  .line-shift-breakdown {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .line-shift-chip {
+    background: rgba(8,16,24,0.45);
+    border: 1px solid rgba(121,201,255,0.24);
+    color: #c8e9ff;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-family: var(--mono);
+  }
 
   /* filter active indicator */
   .col-filter.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim2); }
@@ -1529,6 +1672,8 @@
             </div>
             <div class="workcal-legend">Klik tanggal untuk ON/OFF. Default 2026 mengikuti panduan kalender kerja resmi.</div>
             <div class="workcal-legend-pills">
+              <span class="workcal-pill status-on">Status ON</span>
+              <span class="workcal-pill status-off">Status OFF</span>
               <span class="workcal-pill" style="background:#123e69;color:#79c6ff;border-color:#2f6ea3">Libur nasional (OFF)</span>
               <span class="workcal-pill" style="background:#5e5700;color:#fff176;border-color:#9c9000">Cuti bersama (OFF)</span>
               <span class="workcal-pill" style="background:#6a2e14;color:#ffb087;border-color:#a94d24">Libur dengan penggantian (OFF)</span>
@@ -1539,6 +1684,24 @@
               <div class="workcal-note-box">
                 <div class="workcal-note-title">Keterangan Periode</div>
                 <div id="workcal-notes"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header" style="margin-bottom:10px">
+              <div class="card-title"><div class="card-title-dot"></div>Jumlah Line Shift</div>
+            </div>
+            <div class="line-shift-hero">
+              <div>
+                <div class="line-shift-label">Total Shift Aktif (Semua Line)</div>
+                <div class="line-shift-value" id="cap-line-shift-total">0</div>
+                <div class="line-shift-sub" id="cap-line-shift-sub">0 line aktif</div>
+              </div>
+              <div class="line-shift-breakdown">
+                <span class="line-shift-chip" id="cap-line-shift-s1">S1: 0</span>
+                <span class="line-shift-chip" id="cap-line-shift-s2">S2: 0</span>
+                <span class="line-shift-chip" id="cap-line-shift-s3">S3: 0</span>
               </div>
             </div>
           </div>
@@ -3280,13 +3443,23 @@ function renderWorkCalendar(period) {
     const dt = new Date(y, m - 1, d);
     const dow = dt.getDay();
     const on = !!cal[dateKey];
+    const statusText = on ? 'ON' : 'OFF';
     const weekend = (dow === 0 || dow === 6);
     const ev = guide.byDate[dateKey];
     const evClass = ev?.type === 'national' ? 'evt-national' :
                     ev?.type === 'cuti' ? 'evt-cuti' :
                     ev?.type === 'libur_ganti' ? 'evt-libur-ganti' :
                     ev?.type === 'work_ganti' ? 'evt-work-ganti' : '';
-    html += `<button type="button" title="${ev?.label || ''}" class="workcal-cell ${on ? 'on' : 'off'} ${weekend ? 'weekend' : ''} ${evClass}" onclick="toggleWorkCalendarDate('${period}','${dateKey}')">${d}</button>`;
+    const titleTxt = `${dateKey} | Status: ${statusText}${ev?.label ? ` | ${ev.label}` : ''}`;
+    html += `
+      <button
+        type="button"
+        title="${titleTxt}"
+        class="workcal-cell ${on ? 'on' : 'off'} ${weekend ? 'weekend' : ''} ${evClass} ${ev ? 'has-event' : ''}"
+        onclick="toggleWorkCalendarDate('${period}','${dateKey}')"
+      >
+        <span class="workcal-day-num">${d}</span>
+      </button>`;
   }
 
   gridEl.innerHTML = html;
@@ -3301,7 +3474,7 @@ function renderWorkCalendar(period) {
                     n.type === 'libur_ganti' ? '#a94d24' : '#2f8f62';
         const dd = parseInt(n.date.slice(8,10), 10);
         const mmName = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(n.date.slice(5,7),10)-1];
-        return `<div class="workcal-note-item"><span class="workcal-note-dot" style="background:${dot}"></span><span>${dd} ${mmName}: ${n.label}</span></div>`;
+        return `<div class="workcal-note-item"><span class="workcal-note-dot" style="background:${dot}"></span><span style="flex:1 1 auto">${dd} ${mmName}: ${n.label}</span><span class="workcal-note-state ${n.on ? 'on' : 'off'}">${n.on ? 'ON' : 'OFF'}</span></div>`;
       }).join('');
     }
   }
@@ -3325,15 +3498,55 @@ function syncWorkDaysToCapacityRows(period) {
   });
 }
 
+function calculateLineShiftStats() {
+  const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
+  let s1 = 0, s2 = 0, s3 = 0;
+  lines.forEach(line => {
+    const key = line.replace(/\s/g,'_');
+    s1 += document.getElementById(`s1-${key}`)?.checked ? 1 : 0;
+    s2 += document.getElementById(`s2-${key}`)?.checked ? 1 : 0;
+    s3 += document.getElementById(`s3-${key}`)?.checked ? 1 : 0;
+  });
+  const total = s1 + s2 + s3;
+  const activeLines = lines.filter(line => {
+    const key = line.replace(/\s/g,'_');
+    return (document.getElementById(`s1-${key}`)?.checked ||
+            document.getElementById(`s2-${key}`)?.checked ||
+            document.getElementById(`s3-${key}`)?.checked);
+  }).length;
+  return { total, s1, s2, s3, activeLines, lineCount: lines.length };
+}
+
+function updateLineShiftSummary() {
+  const totalEl = document.getElementById('cap-line-shift-total');
+  const subEl = document.getElementById('cap-line-shift-sub');
+  const s1El = document.getElementById('cap-line-shift-s1');
+  const s2El = document.getElementById('cap-line-shift-s2');
+  const s3El = document.getElementById('cap-line-shift-s3');
+  if (!totalEl || !subEl || !s1El || !s2El || !s3El) return;
+
+  const st = calculateLineShiftStats();
+  totalEl.textContent = st.total;
+  subEl.textContent = `${st.activeLines} line aktif dari ${st.lineCount}`;
+  s1El.textContent = `S1: ${st.s1}`;
+  s2El.textContent = `S2: ${st.s2}`;
+  s3El.textContent = `S3: ${st.s3}`;
+}
+
 function loadCapacityForPeriod() {
   const period = document.getElementById('cap-period-select').value;
   const noPeriod = document.getElementById('cap-no-period');
   const content = document.getElementById('cap-content');
 
-  if (!period) { noPeriod.style.display=''; content.style.display='none'; return; }
+  if (!period) {
+    noPeriod.style.display=''; content.style.display='none';
+    updateLineShiftSummary();
+    return;
+  }
   noPeriod.style.display='none'; content.style.display='';
   renderWorkCalendar(period);
 
+  ensureLineProcessData();
   // get all lines from DB LINE
   const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
   const capData = state.capacity[period] || {};
@@ -3342,6 +3555,7 @@ function loadCapacityForPeriod() {
   const tbody = document.getElementById('cap-tbody');
   if (!lines.length) {
     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--text3)">Database LINE belum diisi</td></tr>`;
+    updateLineShiftSummary();
     return;
   }
 
@@ -3367,6 +3581,7 @@ function loadCapacityForPeriod() {
 
   lines.forEach(l => updateCapPreview(l));
   syncWorkDaysToCapacityRows(period);
+  updateLineShiftSummary();
 }
 
 function updateCapPreview(line) {
@@ -3380,6 +3595,7 @@ function updateCapPreview(line) {
   const totalMins = minsPerDay * wd;
   const el = document.getElementById(`cap-preview-${key}`);
   if (el) el.textContent = totalMins ? `${(totalMins/60).toFixed(1)} jam` : '0';
+  updateLineShiftSummary();
 }
 
 function saveCapacity() {
