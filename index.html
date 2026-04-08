@@ -1988,7 +1988,7 @@ let state = {
   lineProcessData: {}, // { "Line 1":[{name,mp,ct}], ... }
   dbPCS: [],         // [{technology, group, batteryType, plate, separator, spacer, line1, ct1, batHr1, s1_1, s2_1, s3_1, total1, bottleneck1, line2, ct2, batHr2, s1_2, s2_2, s3_2, total2, bottleneck2}]
   orders: {},        // { "2025-01": [{...row data...}] }
-  capacity: {},      // { "2025-01": { "LINE 5": {workDays:22, s1:1, s2:1, s3:0} } }
+  capacity: {},      // { "2025-01": { "LINE 5": {workDays:22, s1:1, s2:1, s3:0, totalCapacityHours:308} } }
   workCalendar: {},  // { "2025-01": { "2025-01-01": 0/1, ... } }
   mpParams: {},      // { "LINE 5": {std:3, loader:1, qc:1, note:""} }
   pendingUpload: null,
@@ -2482,13 +2482,17 @@ function renderDashboard() {
 
     const orders = state.orders[lvcPeriod];
     const capConfig = state.capacity[lvcPeriod] || {};
+    const periodHasSavedCap = Object.keys(capConfig).length > 0;
     const allLines = [...new Set(state.dbLine.map(d=>d.line))].sort();
 
     const lvcRows = allLines.map(line => {
-      const lineOrders = orders.filter(o => getLineForItem(o.item) === line);
-      const cap = capConfig[line] || {workDays:22, s1:1, s2:1, s3:0};
-      const minsPerDay = (cap.s1?435:0)+(cap.s2?405:0)+(cap.s3?370:0);
-      const capacityHours = (minsPerDay * cap.workDays) / 60;
+      const lineOrders = orders.filter(o => normalizeLineCode(getLineForItem(o.item)) === normalizeLineCode(line));
+      const cap = getCapacityConfigByLine(
+        lvcPeriod,
+        line,
+        periodHasSavedCap ? {workDays:0, s1:0, s2:0, s3:0} : {workDays:22, s1:1, s2:1, s3:0}
+      );
+      const capacityHours = cap.totalCapacityHours;
 
       let procSec = 0;
       lineOrders.forEach(o => {
@@ -2496,9 +2500,9 @@ function renderDashboard() {
         if (pcsData && pcsData.ct) procSec += o.qty_order * pcsData.ct;
       });
       const procHours = procSec / 3600;
-      const pct = capacityHours > 0 ? (procHours / capacityHours * 100) : 0;
-      return { line, pct, totalQty: lineOrders.reduce((s,o)=>s+o.qty_order,0) };
-    }).filter(d => d.totalQty > 0 || state.capacity[lvcPeriod]?.[d.line]);
+      const pct = capacityHours > 0 ? (procHours / capacityHours * 100) : (procHours > 0 ? 999 : 0);
+      return { line, pct, totalQty: lineOrders.reduce((s,o)=>s+o.qty_order,0), capacityHours };
+    }).filter(d => d.totalQty > 0 || d.capacityHours > 0);
 
     if (!lvcRows.length) {
       lvcEmpty.style.display = '';
@@ -3393,6 +3397,54 @@ function getCTForItemOnLine(item, targetLine) {
   return { ct: pcs.ct1, batHr: pcs.batHr1, s1: pcs.s1_1, s2: pcs.s2_1, s3: pcs.s3_1, total: pcs.total1, bottleneck: pcs.bottleneck1 };
 }
 
+function normalizeLineCode(line) {
+  const raw = String(line ?? '').trim().toLowerCase();
+  if (!raw) return '';
+  const compact = raw.replace(/\s+/g, ' ');
+  const m = compact.match(/(\d+)/);
+  if (m) return `line ${parseInt(m[1], 10)}`;
+  return compact;
+}
+
+function getCapacityHoursFromConfig(cap = {}) {
+  const workDays = Math.max(0, parseInt(cap.workDays, 10) || 0);
+  const s1 = cap.s1 ? 1 : 0;
+  const s2 = cap.s2 ? 1 : 0;
+  const s3 = cap.s3 ? 1 : 0;
+  const minsPerDay = (s1 ? 435 : 0) + (s2 ? 405 : 0) + (s3 ? 370 : 0);
+  return (minsPerDay * workDays) / 60;
+}
+
+function normalizeCapacityConfig(cap, fallback = {workDays:0, s1:0, s2:0, s3:0}) {
+  const src = (cap && typeof cap === 'object') ? cap : fallback;
+  const workDays = Math.max(0, parseInt(src.workDays, 10) || 0);
+  const s1 = src.s1 ? 1 : 0;
+  const s2 = src.s2 ? 1 : 0;
+  const s3 = src.s3 ? 1 : 0;
+  const parsedTotal = parseFloat(src.totalCapacityHours);
+  const totalCapacityHours = Number.isFinite(parsedTotal)
+    ? Math.max(0, parsedTotal)
+    : getCapacityHoursFromConfig({ workDays, s1, s2, s3 });
+
+  return { workDays, s1, s2, s3, totalCapacityHours };
+}
+
+function getCapacityConfigByLine(period, line, fallback = {workDays:0, s1:0, s2:0, s3:0}) {
+  const capConfig = state.capacity?.[period] || {};
+  if (capConfig && typeof capConfig === 'object') {
+    if (capConfig[line]) {
+      return normalizeCapacityConfig(capConfig[line], fallback);
+    }
+    const target = normalizeLineCode(line);
+    for (const [k, v] of Object.entries(capConfig)) {
+      if (normalizeLineCode(k) === target) {
+        return normalizeCapacityConfig(v, fallback);
+      }
+    }
+  }
+  return normalizeCapacityConfig(fallback, fallback);
+}
+
 // ============================================================
 // CAPACITY SETTING
 // ============================================================
@@ -3662,6 +3714,7 @@ function loadCapacityForPeriod() {
   // get all lines from DB LINE
   const lines = [...new Set(state.dbLine.map(d=>d.line))].sort();
   const capData = state.capacity[period] || {};
+  const periodHasSavedCap = Object.keys(capData).length > 0;
   const workDaysOn = getWorkDaysOn(period);
 
   const tbody = document.getElementById('cap-tbody');
@@ -3672,7 +3725,13 @@ function loadCapacityForPeriod() {
   }
 
   tbody.innerHTML = lines.map(line => {
-    const c = capData[line] || {workDays:22, s1:1, s2:1, s3:0};
+    const c = getCapacityConfigByLine(
+      period,
+      line,
+      periodHasSavedCap
+        ? {workDays:workDaysOn, s1:0, s2:0, s3:0}
+        : {workDays:workDaysOn, s1:1, s2:1, s3:0}
+    );
     return `
       <tr>
         <td><span class="badge badge-blue">${line}</span></td>
@@ -3719,12 +3778,14 @@ async function saveCapacity() {
   state.capacity[period] = {};
   lines.forEach(line => {
     const key = line.replace(/\s/g,'_');
-    state.capacity[period][line] = {
+    const capRow = {
       workDays: workDaysOn,
       s1: document.getElementById(`s1-${key}`)?.checked ? 1 : 0,
       s2: document.getElementById(`s2-${key}`)?.checked ? 1 : 0,
       s3: document.getElementById(`s3-${key}`)?.checked ? 1 : 0,
     };
+    capRow.totalCapacityHours = getCapacityHoursFromConfig(capRow);
+    state.capacity[period][line] = capRow;
   });
 
   // simpan lokal dulu supaya aman saat koneksi putus
@@ -3770,6 +3831,7 @@ function calculateLVC() {
 
   const orders = state.orders[period];
   const capConfig = state.capacity[period] || {};
+  const periodHasSavedCap = Object.keys(capConfig).length > 0;
 
   // group orders by LINE
   const lineGroups = {};
@@ -3793,10 +3855,12 @@ function calculateLVC() {
 
   allLines.forEach(line => {
     const lineOrders = lineGroups[line] || [];
-    const cap = capConfig[line] || {workDays:22, s1:1, s2:1, s3:0};
-    const minsPerDay = (cap.s1?435:0) + (cap.s2?405:0) + (cap.s3?370:0);
-    const capacityMins = minsPerDay * cap.workDays;
-    const capacityHours = capacityMins / 60;
+    const cap = getCapacityConfigByLine(
+      period,
+      line,
+      periodHasSavedCap ? {workDays:0, s1:0, s2:0, s3:0} : {workDays:22, s1:1, s2:1, s3:0}
+    );
+    const capacityHours = cap.totalCapacityHours;
 
     let totalProcessingTimeSec = 0;
     let noPCS = [];
@@ -3813,7 +3877,7 @@ function calculateLVC() {
     noPCS.forEach(item => unmapped.push({item, qty:0, reason:'PCS tidak ditemukan'}));
 
     const processingHours = totalProcessingTimeSec / 3600;
-    const loadingPct = capacityHours > 0 ? (processingHours / capacityHours * 100) : 0;
+    const loadingPct = capacityHours > 0 ? (processingHours / capacityHours * 100) : (processingHours > 0 ? 999 : 0);
     const totalQty = lineOrders.reduce((s,o)=>s+o.qty_order,0);
 
     // Kapasitas per shift (dalam jam) untuk reference lines
@@ -3959,7 +4023,7 @@ function calculateLVC() {
 
       <!-- processing hours di bawah qty -->
       <text x="${cx}" y="${padT + plotH + 38}" text-anchor="middle"
-            font-size="8" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${d.totalQty > 0 ? Math.round(d.capacityHours * 3600 / d.totalQty) + 's' : '-'}</text>
+            font-size="8" font-family="IBM Plex Mono,monospace" fill="#4a5a72">${(d.totalQty > 0 && d.capacityHours > 0) ? Math.round(d.capacityHours * 3600 / d.totalQty) + 's' : '-'}</text>
     `;
   }).join('');
 
@@ -4033,7 +4097,7 @@ function calculateLVC() {
         <td class="td-mono td-bold">${d.totalQty.toLocaleString()}</td>
         <td class="td-mono">${d.processingHours.toFixed(2)}</td>
         <td class="td-mono">${d.capacityHours.toFixed(2)}</td>
-        <td class="td-mono td-bold">${d.totalQty > 0 ? Math.round(d.capacityHours * 3600 / d.totalQty) + ' s/unit' : '-'}</td>
+        <td class="td-mono td-bold">${(d.totalQty > 0 && d.capacityHours > 0) ? Math.round(d.capacityHours * 3600 / d.totalQty) + ' s/unit' : '-'}</td>
         <td class="td-mono td-bold" style="color:${d.loadingPct>100?'var(--red)':d.loadingPct>85?'var(--orange)':'var(--green)'}">${d.loadingPct.toFixed(1)}%</td>
         <td>${status}</td>
         <td style="font-size:11px;color:var(--text3)">${d.shiftActive} × ${d.cap.workDays} hari</td>
@@ -4066,22 +4130,26 @@ function exportLVC() {
 
   const orders = state.orders[period] || [];
   const capConfig = state.capacity[period] || {};
+  const periodHasSavedCap = Object.keys(capConfig).length > 0;
   const allLines = [...new Set(state.dbLine.map(d=>d.line))].sort();
 
   // Build summary sheet
   const summaryRows = [['LINE','Total Order (unit)','Processing Time (jam)','Kapasitas (jam)','Loading %','Status','Shift Aktif','Hari Kerja']];
   allLines.forEach(line => {
-    const lineOrders = orders.filter(o => getLineForItem(o.item) === line);
-    const cap = capConfig[line] || {workDays:22, s1:1, s2:1, s3:0};
-    const minsPerDay = (cap.s1?435:0)+(cap.s2?405:0)+(cap.s3?370:0);
-    const capacityHours = (minsPerDay * cap.workDays) / 60;
+    const lineOrders = orders.filter(o => normalizeLineCode(getLineForItem(o.item)) === normalizeLineCode(line));
+    const cap = getCapacityConfigByLine(
+      period,
+      line,
+      periodHasSavedCap ? {workDays:0, s1:0, s2:0, s3:0} : {workDays:22, s1:1, s2:1, s3:0}
+    );
+    const capacityHours = cap.totalCapacityHours;
     let procSec = 0;
     lineOrders.forEach(o => {
       const pcsData = getCTForItemOnLine(o.item, line);
       if (pcsData && pcsData.ct) procSec += o.qty_order * pcsData.ct;
     });
     const procHours = procSec / 3600;
-    const loadingPct = capacityHours > 0 ? (procHours / capacityHours * 100) : 0;
+    const loadingPct = capacityHours > 0 ? (procHours / capacityHours * 100) : (procHours > 0 ? 999 : 0);
     const totalQty = lineOrders.reduce((s,o)=>s+o.qty_order,0);
     const shiftStr = [cap.s1?'S1':'',cap.s2?'S2':'',cap.s3?'S3':''].filter(Boolean).join('+');
     const status = loadingPct > 100 ? 'OVERLOADED' : loadingPct > 85 ? 'WARNING' : loadingPct > 0 ? 'OK' : 'NO ORDER';
