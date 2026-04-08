@@ -2013,9 +2013,11 @@ function setStorageStatus(mode, type='info') {
 function hasStateData(s) {
   if (!s || typeof s !== 'object') return false;
   return (Array.isArray(s.dbLine) && s.dbLine.length > 0) ||
+         (s.lineProcessData && Object.keys(s.lineProcessData).length > 0) ||
          (Array.isArray(s.dbPCS) && s.dbPCS.length > 0) ||
          (s.orders && Object.keys(s.orders).length > 0) ||
          (s.capacity && Object.keys(s.capacity).length > 0) ||
+         (s.workCalendar && Object.keys(s.workCalendar).length > 0) ||
          (s.mpParams && Object.keys(s.mpParams).length > 0);
 }
 
@@ -2183,12 +2185,13 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') closeExcelFilter();
 });
 
-function saveState() {
+function saveState(opts = {}) {
+  const skipServerSchedule = !!opts.skipServerSchedule;
   try {
     localStorage.setItem('bpms_state', JSON.stringify(state));
   } catch(e) { toast('Storage penuh!', 'error'); }
 
-  if (serverSyncEnabled) {
+  if (serverSyncEnabled && !skipServerSchedule) {
     scheduleServerSave();
   }
 }
@@ -2215,6 +2218,23 @@ async function pushStateToServer(showErrorToast=false) {
     serverSyncEnabled = false;
     setStorageStatus('Storage: Local (server offline)', 'warning');
     if (showErrorToast) toast('Gagal simpan ke server, mode lokal aktif', 'warning');
+    return false;
+  }
+}
+
+async function ensureServerSyncConnected() {
+  if (serverSyncEnabled) return true;
+  try {
+    const res = await fetch(API_STATE_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const payload = await res.json();
+    if (!payload || !payload.ok) throw new Error('Invalid payload');
+    serverSyncEnabled = true;
+    setStorageStatus('Storage: Server Sync', 'ok');
+    return true;
+  } catch (e) {
+    serverSyncEnabled = false;
+    setStorageStatus('Storage: Local (server belum aktif)', 'warning');
     return false;
   }
 }
@@ -3690,7 +3710,7 @@ function updateCapPreview(line) {
   updateLineShiftSummary();
 }
 
-function saveCapacity() {
+async function saveCapacity() {
   const period = document.getElementById('cap-period-select').value;
   if (!period) { toast('Pilih periode terlebih dahulu','warning'); return; }
 
@@ -3706,8 +3726,22 @@ function saveCapacity() {
       s3: document.getElementById(`s3-${key}`)?.checked ? 1 : 0,
     };
   });
-  saveState();
-  toast(`Kapasitas periode ${periodLabel(period)} tersimpan`, 'success');
+
+  // simpan lokal dulu supaya aman saat koneksi putus
+  saveState({ skipServerSchedule: true });
+
+  // lalu paksa sinkron ke server supaya device lain langsung baca data terbaru
+  const serverReady = await ensureServerSyncConnected();
+  if (serverReady) {
+    const pushed = await pushStateToServer(true);
+    if (pushed) {
+      toast(`Kapasitas periode ${periodLabel(period)} tersimpan & sinkron ke server`, 'success');
+    } else {
+      toast(`Kapasitas periode ${periodLabel(period)} tersimpan lokal (sync server gagal)`, 'warning');
+    }
+  } else {
+    toast(`Kapasitas periode ${periodLabel(period)} tersimpan lokal (server belum aktif)`, 'warning');
+  }
 }
 
 // ============================================================

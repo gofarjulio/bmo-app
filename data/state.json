@@ -2,9 +2,11 @@
   "updatedAt": null,
   "state": {
     "dbLine": [],
+    "lineProcessData": {},
     "dbPCS": [],
     "orders": {},
     "capacity": {},
+    "workCalendar": {},
     "mpParams": {},
     "pendingUpload": null,
     "pendingPeriod": null

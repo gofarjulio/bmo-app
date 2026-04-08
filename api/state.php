@@ -23,9 +23,11 @@ $stateFile = $dataDir . DIRECTORY_SEPARATOR . 'state.json';
 
 $defaultState = [
     'dbLine' => [],
+    'lineProcessData' => new stdClass(),
     'dbPCS' => [],
     'orders' => new stdClass(),
     'capacity' => new stdClass(),
+    'workCalendar' => new stdClass(),
     'mpParams' => new stdClass(),
     'pendingUpload' => null,
     'pendingPeriod' => null,
