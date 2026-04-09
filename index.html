@@ -3455,7 +3455,18 @@ function refreshCapPeriods() {
   const keys = Array.from({length: 12}, (_, i) => `2026-${String(i+1).padStart(2,'0')}`);
   sel.innerHTML = '<option value="">-- Pilih Periode --</option>' +
     keys.map(k=>`<option value="${k}" ${k===cur?'selected':''}>${periodLabel(k)}</option>`).join('');
-  if (!cur) sel.value = keys[0];
+
+  let nextPeriod = '';
+  if (cur && keys.includes(cur)) {
+    nextPeriod = cur;
+  } else {
+    const savedPref = localStorage.getItem('bpms_last_cap_period') || '';
+    const periodsWithData = keys.filter(k => state.capacity?.[k] && Object.keys(state.capacity[k]).length > 0);
+    if (savedPref && keys.includes(savedPref)) nextPeriod = savedPref;
+    else if (periodsWithData.length) nextPeriod = periodsWithData[periodsWithData.length - 1];
+    else nextPeriod = keys[0];
+  }
+  sel.value = nextPeriod;
   loadCapacityForPeriod();
 }
 
@@ -3708,6 +3719,7 @@ function loadCapacityForPeriod() {
     return;
   }
   noPeriod.style.display='none'; content.style.display='';
+  localStorage.setItem('bpms_last_cap_period', period);
   renderWorkCalendar(period);
 
   ensureLineProcessData();
