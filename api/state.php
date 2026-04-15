@@ -52,24 +52,63 @@ function jsonResponse(array $payload, int $statusCode = 200): void
     exit;
 }
 
+function isListArrayCompat(array $arr): bool
+{
+    if (function_exists('array_is_list')) {
+        return array_is_list($arr);
+    }
+    $i = 0;
+    foreach ($arr as $k => $_) {
+        if ($k !== $i++) return false;
+    }
+    return true;
+}
+
+function normalizeStateTypes(array $state, array $defaultState): array
+{
+    $state = array_merge($defaultState, $state);
+
+    $listKeys = ['dbLine', 'dbPCS'];
+    foreach ($listKeys as $k) {
+        if (!isset($state[$k]) || !is_array($state[$k]) || !isListArrayCompat($state[$k])) {
+            $state[$k] = [];
+        }
+    }
+
+    $mapKeys = ['lineProcessData', 'orders', 'capacity', 'workCalendar', 'mpParams'];
+    foreach ($mapKeys as $k) {
+        $v = $state[$k] ?? null;
+        if (!is_array($v)) {
+            $state[$k] = new stdClass();
+            continue;
+        }
+        // Empty or list array means invalid shape for map/object keys.
+        if (count($v) === 0 || isListArrayCompat($v)) {
+            $state[$k] = new stdClass();
+        }
+    }
+
+    return $state;
+}
+
 function readStateFile(string $stateFile, array $defaultState): array
 {
     $raw = @file_get_contents($stateFile);
     if ($raw === false || trim($raw) === '') {
-        return $defaultState;
+        return normalizeStateTypes($defaultState, $defaultState);
     }
 
     $decoded = json_decode($raw, true);
     if (!is_array($decoded)) {
-        return $defaultState;
+        return normalizeStateTypes($defaultState, $defaultState);
     }
 
     $state = $decoded['state'] ?? $decoded;
     if (!is_array($state)) {
-        return $defaultState;
+        return normalizeStateTypes($defaultState, $defaultState);
     }
 
-    return array_merge($defaultState, $state);
+    return normalizeStateTypes($state, $defaultState);
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -87,7 +126,7 @@ if (!is_array($payload) || !isset($payload['state']) || !is_array($payload['stat
     jsonResponse(['ok' => false, 'error' => 'Format payload tidak valid'], 400);
 }
 
-$nextState = array_merge($defaultState, $payload['state']);
+$nextState = normalizeStateTypes($payload['state'], $defaultState);
 $writeData = [
     'updatedAt' => gmdate('c'),
     'state' => $nextState,

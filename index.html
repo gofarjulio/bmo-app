@@ -2021,6 +2021,37 @@ function hasStateData(s) {
          (s.mpParams && Object.keys(s.mpParams).length > 0);
 }
 
+function normalizeStateShape(obj) {
+  if (!obj || typeof obj !== 'object') return false;
+  let changed = false;
+
+  const ensureArray = (k) => {
+    if (!Array.isArray(obj[k])) {
+      obj[k] = [];
+      changed = true;
+    }
+  };
+  const ensureMap = (k) => {
+    if (!obj[k] || typeof obj[k] !== 'object' || Array.isArray(obj[k])) {
+      obj[k] = {};
+      changed = true;
+    }
+  };
+
+  ensureArray('dbLine');
+  ensureArray('dbPCS');
+  ensureMap('lineProcessData');
+  ensureMap('orders');
+  ensureMap('capacity');
+  ensureMap('workCalendar');
+  ensureMap('mpParams');
+
+  if (typeof obj.pendingUpload === 'undefined') { obj.pendingUpload = null; changed = true; }
+  if (typeof obj.pendingPeriod === 'undefined') { obj.pendingPeriod = null; changed = true; }
+
+  return changed;
+}
+
 function escHtml(s) {
   return String(s ?? '')
     .replaceAll('&', '&amp;')
@@ -2187,6 +2218,7 @@ document.addEventListener('keydown', (e) => {
 
 function saveState(opts = {}) {
   const skipServerSchedule = !!opts.skipServerSchedule;
+  normalizeStateShape(state);
   try {
     localStorage.setItem('bpms_state', JSON.stringify(state));
   } catch(e) { toast('Storage penuh!', 'error'); }
@@ -2206,6 +2238,7 @@ function scheduleServerSave(delay=450) {
 async function pushStateToServer(showErrorToast=false) {
   if (!serverSyncEnabled) return false;
   try {
+    normalizeStateShape(state);
     const res = await fetch(API_STATE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2246,6 +2279,7 @@ async function loadState() {
     try {
       const parsedLocal = JSON.parse(raw);
       state = {...state, ...parsedLocal};
+      normalizeStateShape(state);
       localSnapshot = parsedLocal;
     } catch(e) {}
   }
@@ -2269,8 +2303,10 @@ async function loadState() {
       }
 
       state = { ...state, ...payload.state };
+      const normalized = normalizeStateShape(state);
       localStorage.setItem('bpms_state', JSON.stringify(state));
       setStorageStatus('Storage: Server Sync', 'ok');
+      if (normalized) await pushStateToServer();
       return;
     }
     throw new Error('Invalid payload');
